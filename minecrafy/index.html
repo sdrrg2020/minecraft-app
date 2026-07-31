@@ -66,7 +66,7 @@
 
         .splash-logo {
             font-family: 'Press Start 2P', monospace;
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--mc-gold);
             text-shadow: 0 0 15px rgba(244, 196, 48, 0.5);
             margin-bottom: 20px;
@@ -116,7 +116,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 16px;
-            padding-bottom: 80px;
+            padding-bottom: 90px;
         }
 
         .tab-content {
@@ -164,6 +164,14 @@
             color: var(--mc-gold);
             text-shadow: 0 0 10px rgba(244, 196, 48, 0.4);
         }
+
+        .mc-card {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid var(--mc-stone);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -180,12 +188,31 @@
     <!-- CONTENEDOR PRINCIPAL -->
     <div class="app-container">
         <div class="content-area">
+            
             <!-- Pestaña de Inicio -->
             <div id="tab-home" class="tab-content active">
-                <h1 style="font-family: 'Press Start 2P'; font-size: 1rem; color: var(--mc-gold); margin-bottom: 15px;">Panel Principal</h1>
-                <p>Bienvenido a MinecrafTG. Selecciona un pico, mina recursos y genera recompensas en la red.</p>
+                <div class="mc-card">
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--mc-gold); margin-bottom: 10px;">Panel Principal</h2>
+                    <p style="font-size: 0.9rem; line-height: 1.4;">Bienvenido a MinecrafTG. Selecciona un pico, mina recursos y genera recompensas en la red.</p>
+                </div>
             </div>
-            <!-- Otras pestañas se pueden agregar aquí -->
+
+            <!-- Pestaña de Picos (Mercado) -->
+            <div id="tab-market" class="tab-content">
+                <div class="mc-card">
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--mc-gold); margin-bottom: 10px;">Mercado de Picos</h2>
+                    <p style="font-size: 0.9rem;">Próximamente el catálogo completo de herramientas mineras.</p>
+                </div>
+            </div>
+
+            <!-- Pestaña de Wallet -->
+            <div id="tab-wallet" class="tab-content">
+                <div class="mc-card">
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--mc-gold); margin-bottom: 10px;">Caja Fuerte</h2>
+                    <p style="font-size: 0.9rem;">Gestiona tus depósitos y retiros en USDT.</p>
+                </div>
+            </div>
+
         </div>
 
         <!-- BARRA DE NAVEGACIÓN -->
@@ -209,16 +236,16 @@
         // Simulación de Pantalla de Carga
         let progress = 0;
         const progressInterval = setInterval(() => {
-            progress += 10;
+            progress += 15;
             document.getElementById('progress-fill').style.width = progress + '%';
             if (progress >= 100) {
                 clearInterval(progressInterval);
                 document.getElementById('splash-screen').style.opacity = '0';
                 setTimeout(() => {
                     document.getElementById('splash-screen').style.display = 'none';
-                }, 500);
+                }, 400);
             }
-        }, 150);
+        }, 120);
 
         // Sistema de Pestañas
         function switchTab(tabName) {
@@ -227,11 +254,16 @@
             
             if(tabName === 'home') {
                 document.getElementById('tab-home').classList.add('active');
+                event.currentTarget.classList.add('active');
+            } else if(tabName === 'market') {
+                document.getElementById('tab-market').classList.add('active');
+                event.currentTarget.classList.add('active');
+            } else if(tabName === 'wallet') {
+                document.getElementById('tab-wallet').classList.add('active');
+                event.currentTarget.classList.add('active');
             }
-            // Agregar lógica de más pestañas aquí si es necesario
         }
     </script>
 </body>
 </html>
-      
-
+        
