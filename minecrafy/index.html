@@ -22,8 +22,6 @@
             --mc-border: #334155;
             --mc-text: #f8fafc;
             --mc-red: #ef4444;
-            --mc-gold-glow: 0 0 25px rgba(244, 196, 48, 0.6);
-            --mc-diamond-glow: 0 0 25px rgba(77, 238, 234, 0.6);
         }
 
         * {
@@ -48,7 +46,7 @@
                 linear-gradient(135deg, #090b0e 0%, #111827 100%);
         }
 
-        /* --- PANTALLA DE CARGA ÉPICA --- */
+        /* PANTALLA DE CARGA */
         #splash-screen {
             position: fixed;
             top: 0;
@@ -61,12 +59,12 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.4s ease;
         }
 
         .splash-logo {
             font-family: 'Press Start 2P', monospace;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: var(--mc-gold);
             text-shadow: 0 0 15px rgba(244, 196, 48, 0.5);
             margin-bottom: 20px;
@@ -75,8 +73,8 @@
 
         .progress-bar-container {
             width: 80%;
-            max-width: 300px;
-            height: 20px;
+            max-width: 280px;
+            height: 18px;
             background: var(--mc-border);
             border: 2px solid var(--mc-stone);
             padding: 2px;
@@ -87,10 +85,10 @@
             height: 100%;
             background: var(--mc-green);
             width: 0%;
-            transition: width 0.2s ease;
+            transition: width 0.15s ease;
         }
 
-        /* Contenedor Principal de la App */
+        /* CONTENEDOR DE LA APP */
         .app-container {
             width: 100%;
             max-width: 480px;
@@ -106,8 +104,8 @@
 
         @media(min-width: 481px) {
             .app-container {
-                border-radius: 20px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+                border-radius: 16px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.7);
                 height: 85vh;
             }
         }
@@ -127,14 +125,14 @@
             display: block;
         }
 
-        /* Barra de Navegación Inferior */
+        /* NAVEGACIÓN INFERIOR */
         .nav-bar {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
             height: 70px;
-            background: rgba(11, 13, 16, 0.95);
+            background: rgba(11, 13, 16, 0.98);
             border-top: 1px solid var(--mc-border);
             display: flex;
             justify-content: space-around;
@@ -146,17 +144,18 @@
             background: none;
             border: none;
             color: var(--mc-stone);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
             cursor: pointer;
             transition: color 0.2s;
+            flex: 1;
         }
 
         .nav-btn span {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-family: 'Press Start 2P', monospace;
         }
 
@@ -166,11 +165,11 @@
         }
 
         .mc-card {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.9);
             border: 2px solid var(--mc-stone);
-            padding: 15px;
+            padding: 16px;
             margin-bottom: 15px;
-            border-radius: 8px;
+            border-radius: 6px;
         }
     </style>
 </head>
@@ -182,34 +181,34 @@
         <div class="progress-bar-container">
             <div class="progress-bar-fill" id="progress-fill"></div>
         </div>
-        <p style="margin-top: 15px; font-size: 0.8rem; color: var(--mc-stone);">Cargando bloques y texturas...</p>
+        <p style="margin-top: 15px; font-size: 0.75rem; color: var(--mc-stone);">Cargando bloques y texturas...</p>
     </div>
 
     <!-- CONTENEDOR PRINCIPAL -->
     <div class="app-container">
         <div class="content-area">
             
-            <!-- Pestaña de Inicio -->
+            <!-- Pestaña Inicio -->
             <div id="tab-home" class="tab-content active">
                 <div class="mc-card">
-                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--mc-gold); margin-bottom: 10px;">Panel Principal</h2>
-                    <p style="font-size: 0.9rem; line-height: 1.4;">Bienvenido a MinecrafTG. Selecciona un pico, mina recursos y genera recompensas en la red.</p>
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.85rem; color: var(--mc-gold); margin-bottom: 12px;">Panel Principal</h2>
+                    <p style="font-size: 0.85rem; line-height: 1.5;">Bienvenido a MinecrafTG. Selecciona un pico, mina recursos y genera recompensas diarias en la red.</p>
                 </div>
             </div>
 
-            <!-- Pestaña de Picos (Mercado) -->
+            <!-- Pestaña Picos -->
             <div id="tab-market" class="tab-content">
                 <div class="mc-card">
-                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--mc-gold); margin-bottom: 10px;">Mercado de Picos</h2>
-                    <p style="font-size: 0.9rem;">Próximamente el catálogo completo de herramientas mineras.</p>
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.85rem; color: var(--mc-gold); margin-bottom: 12px;">Mercado de Picos</h2>
+                    <p style="font-size: 0.85rem; line-height: 1.5;">Catálogo de herramientas mineras y picos de rendimiento activo.</p>
                 </div>
             </div>
 
-            <!-- Pestaña de Wallet -->
+            <!-- Pestaña Wallet -->
             <div id="tab-wallet" class="tab-content">
                 <div class="mc-card">
-                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.9rem; color: var(--mc-gold); margin-bottom: 10px;">Caja Fuerte</h2>
-                    <p style="font-size: 0.9rem;">Gestiona tus depósitos y retiros en USDT.</p>
+                    <h2 style="font-family: 'Press Start 2P'; font-size: 0.85rem; color: var(--mc-gold); margin-bottom: 12px;">Caja Fuerte</h2>
+                    <p style="font-size: 0.85rem; line-height: 1.5;">Gestión segura de depósitos y retiros en USDT.</p>
                 </div>
             </div>
 
@@ -217,15 +216,15 @@
 
         <!-- BARRA DE NAVEGACIÓN -->
         <nav class="nav-bar">
-            <button class="nav-btn active" onclick="switchTab('home')">
+            <button class="nav-btn active" onclick="switchTab('home', this)">
                 <i class="fa-solid fa-house"></i>
                 <span>Inicio</span>
             </button>
-            <button class="nav-btn" onclick="switchTab('market')">
+            <button class="nav-btn" onclick="switchTab('market', this)">
                 <i class="fa-solid fa-hammer"></i>
                 <span>Picos</span>
             </button>
-            <button class="nav-btn" onclick="switchTab('wallet')">
+            <button class="nav-btn" onclick="switchTab('wallet', this)">
                 <i class="fa-solid fa-wallet"></i>
                 <span>Wallet</span>
             </button>
@@ -233,37 +232,39 @@
     </div>
 
     <script>
-        // Simulación de Pantalla de Carga
+        // Barra de Carga Inicial
         let progress = 0;
         const progressInterval = setInterval(() => {
-            progress += 15;
-            document.getElementById('progress-fill').style.width = progress + '%';
+            progress += 20;
+            const fill = document.getElementById('progress-fill');
+            if (fill) fill.style.width = progress + '%';
+            
             if (progress >= 100) {
                 clearInterval(progressInterval);
-                document.getElementById('splash-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('splash-screen').style.display = 'none';
-                }, 400);
+                const splash = document.getElementById('splash-screen');
+                if (splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => {
+                        splash.style.display = 'none';
+                    }, 400);
+                }
             }
-        }, 120);
+        }, 100);
 
-        // Sistema de Pestañas
-        function switchTab(tabName) {
+        // Control de Pestañas Seguro
+        function switchTab(tabName, buttonElement) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             
-            if(tabName === 'home') {
-                document.getElementById('tab-home').classList.add('active');
-                event.currentTarget.classList.add('active');
-            } else if(tabName === 'market') {
-                document.getElementById('tab-market').classList.add('active');
-                event.currentTarget.classList.add('active');
-            } else if(tabName === 'wallet') {
-                document.getElementById('tab-wallet').classList.add('active');
-                event.currentTarget.classList.add('active');
+            const targetTab = document.getElementById('tab-' + tabName);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            if (buttonElement) {
+                buttonElement.classList.add('active');
             }
         }
     </script>
 </body>
 </html>
-        
