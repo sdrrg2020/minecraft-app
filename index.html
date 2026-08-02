@@ -195,6 +195,13 @@
             box-shadow: 0 2px 0 #15803d;
         }
 
+        .pixel-btn:disabled {
+            background-color: #334155;
+            color: #64748b;
+            box-shadow: 0 4px 0 #1e293b;
+            cursor: not-allowed;
+        }
+
         .pixel-btn.secondary {
             background-color: #3b82f6;
             box-shadow: 0 4px 0 #1d4ed8;
@@ -471,7 +478,7 @@
                 </div>
                 <div class="input-group">
                     <label>Monto a Retirar ($)</label>
-                    <input type="number" id="withdraw-amount" class="pixel-input" placeholder="0.00">
+                    <input type="number" id="withdraw-amount" class="pixel-input" placeholder="0.00" min="0" step="any">
                 </div>
                 <button class="pixel-btn" onclick="requestWithdraw()"><i class="fa-solid fa-paper-plane"></i> SOLICITAR RETIRO</button>
             </div>
@@ -530,11 +537,13 @@
     <script>
         // Configuración Supabase
         const SUPABASE_URL = 'https://jigwnrqonndombxzagwh.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZ3ducXFvbm5kb21ieHphZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjV9...'; // Clave pública segura estándar de la instancia
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZ3ducXFvbm5kb21ieHphZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3fQ.placeholder_key'; 
         
         let supabaseClient = null;
         try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
         } catch(e) {
             console.error("Error inicializando Supabase:", e);
         }
@@ -545,7 +554,7 @@
             balance: 0.00,
             totalEarned: 0.00,
             activePickaxe: null,
-            miningEndTime: null
+            isSpinning: false
         };
 
         // Catálogo de Picos
@@ -562,31 +571,22 @@
         window.addEventListener('DOMContentLoaded', () => {
             renderShop();
             loadUserData();
-            checkDemoMaster();
         });
-
-        // Truco Demo Master
-        function checkDemoMaster() {
-            const savedUser = localStorage.getItem('minecraftg_username');
-            if (savedUser === 'DemoMaster') {
-                appState.balance = 150.00;
-                appState.totalEarned = 350.00;
-                updateUI();
-            }
-        }
 
         // Navegación entre Vistas
         function switchView(viewId, btnElement) {
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             
-            document.getElementById('view-' + viewId).classList.add('active');
-            btnElement.classList.add('active');
+            const targetView = document.getElementById('view-' + viewId);
+            if (targetView) targetView.classList.add('active');
+            if (btnElement) btnElement.classList.add('active');
         }
 
         // Renderizar Tienda
         function renderShop() {
             const container = document.getElementById('shop-items-container');
+            if (!container) return;
             container.innerHTML = '';
             
             pickaxes.forEach(p => {
@@ -604,16 +604,23 @@
 
         // Guardar Nombre
         function saveUsername() {
-            const val = document.getElementById('username-input').value.trim();
+            const inputEl = document.getElementById('username-input');
+            if (!inputEl) return;
+            const val = inputEl.value.trim();
+            
             if (!val) {
                 showToast("Ingresa un nombre de usuario válido", true);
                 return;
             }
+            
             appState.username = val;
             localStorage.setItem('minecraftg_username', val);
             
             if (val === 'DemoMaster') {
                 appState.balance = 150.00;
+                appState.totalEarned = 350.00;
+                localStorage.setItem('minecraftg_balance', appState.balance);
+                localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
                 showToast("¡Modo Demo Activado con $150 USDT!", false);
             } else {
                 showToast("¡Nombre guardado con éxito!", false);
@@ -621,25 +628,48 @@
             updateUI();
         }
 
+        // Cargar Datos del Usuario
         function loadUserData() {
             const saved = localStorage.getItem('minecraftg_username');
             if (saved) {
                 appState.username = saved;
-                document.getElementById('username-input').value = saved;
+                const inputEl = document.getElementById('username-input');
+                if (inputEl) inputEl.value = saved;
             }
-            const savedBal = localStorage.getItem('minecraftg_balance');
-            if (savedBal) appState.balance = parseFloat(savedBal);
             
+            const savedBal = localStorage.getItem('minecraftg_balance');
+            if (savedBal !== null) appState.balance = parseFloat(savedBal) || 0;
+
+            const savedEarned = localStorage.getItem('minecraftg_total_earned');
+            if (savedEarned !== null) appState.totalEarned = parseFloat(savedEarned) || 0;
+
+            const savedPickaxe = localStorage.getItem('minecraftg_active_pickaxe');
+            if (savedPickaxe) appState.activePickaxe = savedPickaxe;
+
+            if (saved === 'DemoMaster' && savedBal === null) {
+                appState.balance = 150.00;
+                appState.totalEarned = 350.00;
+            }
+
             updateUI();
         }
 
+        // Actualizar Interfaz Gráfica
         function updateUI() {
-            document.getElementById('user-balance').innerText = `$${appState.balance.toFixed(2)}`;
-            document.getElementById('user-total-earned').innerText = `$${appState.totalEarned.toFixed(2)}`;
+            const balanceEl = document.getElementById('user-balance');
+            const totalEarnedEl = document.getElementById('user-total-earned');
+            const statusTextEl = document.getElementById('mining-status-text');
+            const mineBtnEl = document.getElementById('mine-action-btn');
+
+            if (balanceEl) balanceEl.innerText = `$${appState.balance.toFixed(2)}`;
+            if (totalEarnedEl) totalEarnedEl.innerText = `$${appState.totalEarned.toFixed(2)}`;
             
             if (appState.activePickaxe) {
-                document.getElementById('mining-status-text').innerText = `Pico Activo: ${appState.activePickaxe}`;
-                document.getElementById('mine-action-btn').removeAttribute('disabled');
+                if (statusTextEl) statusTextEl.innerText = `Pico Activo: ${appState.activePickaxe}`;
+                if (mineBtnEl) mineBtnEl.removeAttribute('disabled');
+            } else {
+                if (statusTextEl) statusTextEl.innerText = `Pico Activo: Ninguno (Compra un pico para iniciar)`;
+                if (mineBtnEl) mineBtnEl.setAttribute('disabled', 'true');
             }
         }
 
@@ -651,8 +681,11 @@
             }
             appState.balance -= price;
             appState.activePickaxe = id;
+            
             localStorage.setItem('minecraftg_balance', appState.balance);
-            showToast(`¡Has adquirido el pico ${id} exitosamente!`, false);
+            localStorage.setItem('minecraftg_active_pickaxe', id);
+            
+            showToast("¡Has adquirido el pico exitosamente!", false);
             updateUI();
             switchView('mine', document.querySelector('.nav-item'));
         }
@@ -665,7 +698,10 @@
             }
             appState.balance += 5.00;
             appState.totalEarned += 5.00;
+            
             localStorage.setItem('minecraftg_balance', appState.balance);
+            localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
+            
             showToast("¡Minado exitoso! +$5.00 USDT añadidos", false);
             updateUI();
         }
@@ -677,50 +713,78 @@
                 return;
             }
             appState.balance += 2.00;
+            appState.totalEarned += 2.00;
+            
             localStorage.setItem('minecraftg_balance', appState.balance);
+            localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
+            
             showToast("¡Asistencia reclamada: +$2.00 USDT!", false);
             updateUI();
         }
 
         // Girar Ruleta
         function spinWheel() {
+            if (appState.isSpinning) return;
             const wheel = document.getElementById('arcade-wheel');
-            const randomDegree = Math.floor(Math.random() * 3600) + 720;
+            if (!wheel) return;
+
+            appState.isSpinning = true;
+            const randomDegree = Math.floor(Math.random() * 3600) + 1440;
             wheel.style.transform = `rotate(${randomDegree}deg)`;
             
             setTimeout(() => {
-                showToast("¡Felicidades! Ganaste $5.00 en la ruleta arcade", false);
                 appState.balance += 5.00;
+                appState.totalEarned += 5.00;
                 localStorage.setItem('minecraftg_balance', appState.balance);
+                localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
+                
+                showToast("¡Felicidades! Ganaste $5.00 en la ruleta arcade", false);
                 updateUI();
+                appState.isSpinning = false;
             }, 4000);
         }
 
         // Retiros
         function requestWithdraw() {
-            const amt = parseFloat(document.getElementById('withdraw-amount').value);
-            if (!amt || amt <= 0 || amt > appState.balance) {
-                showToast("Monto de retiro inválido o superior al saldo", true);
+            const amountInput = document.getElementById('withdraw-amount');
+            if (!amountInput) return;
+            const amt = parseFloat(amountInput.value);
+
+            if (isNaN(amt) || amt <= 0) {
+                showToast("Ingresa un monto de retiro válido", true);
                 return;
             }
+            if (amt > appState.balance) {
+                showToast("Monto superior al saldo disponible", true);
+                return;
+            }
+
             appState.balance -= amt;
             localStorage.setItem('minecraftg_balance', appState.balance);
+            
             showToast("¡Solicitud de retiro enviada a la red TRC20!", false);
-            document.getElementById('withdraw-amount').value = '';
+            amountInput.value = '';
             updateUI();
         }
 
         // Copiar Referidos
         function copyRefLink() {
             const copyText = document.getElementById('ref-link');
+            if (!copyText) return;
             copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            showToast("¡Enlace de referidos copiado al portapapeles!", false);
+            copyText.setSelectionRange(0, 99999);
+            
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                showToast("¡Enlace copiado al portapapeles!", false);
+            }).catch(() => {
+                showToast("No se pudo copiar el enlace", true);
+            });
         }
 
         // Mostrar Alertas Toast
         function showToast(message, isError) {
             const toast = document.getElementById('toast-notification');
+            if (!toast) return;
             toast.innerText = message;
             toast.className = `toast show ${isError ? 'error' : ''}`;
             setTimeout(() => {
