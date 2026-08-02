@@ -983,7 +983,6 @@
                     userReferralData.validRefs = parseInt(data.valid_refs) || 0;
                 }
             } else {
-                // Nuevo usuario: Registrar referido si existe
                 const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
                 if (referredBy && referredBy.startsWith('ref_')) {
                     const referrerId = referredBy.replace('ref_', '');
@@ -1029,7 +1028,7 @@
     async function syncUserDataWithSupabase() {
         try {
             const payload = {
-                telegram_id: String(telegramId), // Forzado estrictamente a texto
+                telegram_id: String(telegramId),
                 username: currentUsername,
                 balance: currentUserBalance,
                 total_roi: currentUserTotalRoi,
@@ -1044,7 +1043,7 @@
             const { data, error: upsertError } = await supabaseClient
                 .from('users')
                 .upsert(payload, { onConflict: 'telegram_id' })
-                .select(); // Obliga a Supabase a confirmar el guardado
+                .select();
 
             if (upsertError) {
                 console.error("Error al guardar en Supabase:", upsertError.message);
@@ -1210,7 +1209,6 @@
         userRouletteData.hasFreeSpin = true;
         miningTimeRemaining = 86400;
 
-        // Si es su primera compra y tiene referido, actualizar referidos válidos en Supabase
         if (wasNoPickaxe) {
             const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
             if (referredBy && referredBy.startsWith('ref_')) {
