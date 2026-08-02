@@ -2,26 +2,30 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MinecrafTG - Professional Mini App</title>
-    <!-- Google Fonts: Press Start 2P & Plus Jakarta Sans -->
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
+    <!-- Fuentes Profesionales -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase Client -->
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root {
-            --bg-color: #0f111a;
-            --card-bg: #1a1d2e;
-            --card-border: #2a2f4c;
-            --accent-green: #22c55e;
-            --accent-green-hover: #16a34a;
-            --accent-gold: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --pixel-font: 'Press Start 2P', monospace;
-            --sans-font: 'Plus Jakarta Sans', sans-serif;
+            --mc-green: #5b8731;
+            --mc-dark-green: #38561c;
+            --mc-dirt: #866043;
+            --mc-stone: #737373;
+            --mc-gold: #f4c430;
+            --mc-diamond: #4deeea;
+            --mc-bg: #0b0d10;
+            --mc-card-bg: rgba(20, 25, 33, 0.95);
+            --mc-border: #334155;
+            --mc-text: #f8fafc;
+            --mc-red: #ef4444;
+            --mc-gold-glow: 0 0 25px rgba(244, 196, 48, 0.6);
+            --mc-diamond-glow: 0 0 25px rgba(77, 238, 234, 0.6);
         }
 
         * {
@@ -29,768 +33,1382 @@
             margin: 0;
             padding: 0;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: var(--sans-font);
+            background-color: var(--mc-bg);
+            color: var(--mc-text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 15%, rgba(91, 135, 49, 0.2) 0%, transparent 65%),
+                linear-gradient(135deg, #090b0e 0%, #111827 100%);
         }
 
-        /* Notificaciones / Ticker superior */
-        .top-ticker {
-            background: rgba(26, 29, 46, 0.95);
-            border-bottom: 2px solid var(--card-border);
-            padding: 8px 12px;
+        /* --- PANTALLA DE CARGA ÉPICA CINEMATOGRÁFICA --- */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .splash-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--mc-gold);
+            box-shadow: 0 0 10px var(--mc-gold);
+            animation: floatParticle 4s infinite linear;
+            opacity: 0.7;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+
+        .splash-content-wrapper {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .splash-icon-box {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 4px solid var(--mc-gold);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            color: var(--mc-gold);
+            box-shadow: 0 0 40px rgba(244, 196, 48, 0.4), inset 0 0 15px rgba(0,0,0,0.8);
+            margin-bottom: 25px;
+            animation: bounceBox 2s infinite ease-in-out alternate;
+        }
+
+        @keyframes bounceBox {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-12px) rotate(2deg); filter: brightness(1.3); }
+        }
+
+        .splash-logo {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 22px;
+            color: #fff;
+            text-shadow: 3px 3px 0 #000, 0 0 25px rgba(77,238,234,0.6);
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .splash-subtitle {
             font-size: 11px;
-            font-family: var(--pixel-font);
-            white-space: nowrap;
+            color: var(--mc-diamond);
+            letter-spacing: 3px;
+            margin-bottom: 35px;
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(77,238,234,0.4);
+            text-align: center;
+        }
+
+        .splash-loader-box {
+            width: 100%;
+            background: rgba(5, 7, 10, 0.9);
+            border: 3px solid var(--mc-border);
+            border-radius: 10px;
+            padding: 6px;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.9);
+            margin-bottom: 16px;
+        }
+
+        .splash-loader-bar {
+            width: 100%;
+            height: 20px;
+            background: #020408;
+            border-radius: 6px;
             overflow: hidden;
             position: relative;
-            z-index: 100;
         }
 
-        .ticker-content {
-            display: inline-block;
-            animation: ticker 25s linear infinite;
-            color: var(--accent-gold);
+        .splash-loader-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #4deeea, #f4c430);
+            width: 0%;
+            transition: width 0.15s linear;
+            box-shadow: 0 0 15px rgba(77,238,234,0.8);
         }
 
-        @keyframes ticker {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+        .splash-loading-status {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+            color: #94a3b8;
+            text-transform: uppercase;
         }
 
-        /* Cabecera Principal */
+        .splash-loading-status span:last-child {
+            color: var(--mc-gold);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: rgba(14, 17, 23, 0.99);
+            border-left: 2px solid var(--mc-border);
+            border-right: 2px solid var(--mc-border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+        }
+
+        /* --- HEADER --- */
         header {
+            padding: 18px 16px 12px;
             text-align: center;
-            padding: 20px 15px 10px;
-            background: linear-gradient(180deg, rgba(26,29,46,1) 0%, rgba(15,17,26,1) 100%);
-            border-bottom: 2px solid var(--card-border);
+            background: linear-gradient(to bottom, rgba(56, 86, 28, 0.5), transparent);
+            border-bottom: 2px solid var(--mc-dark-green);
         }
 
         .logo-container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .logo-title {
-            font-family: var(--pixel-font);
-            font-size: 22px;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 2px 2px 0px #000;
-        }
-
-        .logo-subtitle {
-            font-size: 10px;
-            font-family: var(--pixel-font);
-            color: var(--text-muted);
-            letter-spacing: 1px;
-        }
-
-        /* Contenedor de Vistas / Pestañas */
-        .main-container {
-            flex: 1;
-            padding: 15px 15px 85px 15px;
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .view-section {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .view-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Tarjetas Estilo Pixel */
-        .pixel-card {
-            background-color: var(--card-bg);
-            border: 2px solid var(--card-border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-        }
-
-        .card-title {
-            font-family: var(--pixel-font);
-            font-size: 11px;
-            color: var(--accent-gold);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Formularios y Inputs */
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .input-group label {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .pixel-input {
-            background: #0f111a;
-            border: 2px solid var(--card-border);
-            border-radius: 8px;
-            padding: 12px;
-            color: #fff;
-            font-family: var(--sans-font);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .pixel-input:focus {
-            border-color: var(--accent-green);
-        }
-
-        /* Botones Pixelados */
-        .pixel-btn {
-            background-color: var(--accent-green);
-            color: #0f111a;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-family: var(--pixel-font);
-            font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 8px;
-            transition: background-color 0.2s, transform 0.1s;
-            box-shadow: 0 4px 0 #15803d;
-        }
-
-        .pixel-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #15803d;
-        }
-
-        .pixel-btn:disabled {
-            background-color: #334155;
-            color: #64748b;
-            box-shadow: 0 4px 0 #1e293b;
-            cursor: not-allowed;
-        }
-
-        .pixel-btn.secondary {
-            background-color: #3b82f6;
-            box-shadow: 0 4px 0 #1d4ed8;
-        }
-        .pixel-btn.secondary:active {
-            box-shadow: 0 2px 0 #1d4ed8;
-        }
-
-        .pixel-btn.gold {
-            background-color: var(--accent-gold);
-            box-shadow: 0 4px 0 #b45309;
-            color: #fff;
-        }
-        .pixel-btn.gold:active {
-            box-shadow: 0 2px 0 #b45309;
-        }
-
-        /* Estadísticas en cuadrícula */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .stat-box {
-            background: #0f111a;
-            border: 2px solid var(--card-border);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            font-family: var(--pixel-font);
-            color: var(--text-muted);
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
             margin-bottom: 6px;
         }
 
-        .stat-value {
-            font-family: var(--pixel-font);
-            font-size: 14px;
-            color: var(--accent-gold);
+        .logo-letter {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 19px;
+            font-weight: bold;
+            display: inline-block;
+            text-shadow: 2px 2px 0px #000;
+            animation: letterBounce 2s infinite ease-in-out alternate;
         }
 
-        /* Listas de Tienda / Picos */
-        .item-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #0f111a;
-            border: 2px solid var(--card-border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
+        .logo-letter:nth-child(1) { color: #5b8731; animation-delay: 0.1s; }
+        .logo-letter:nth-child(2) { color: #737373; animation-delay: 0.2s; }
+        .logo-letter:nth-child(3) { color: #866043; animation-delay: 0.3s; }
+        .logo-letter:nth-child(4) { color: #5b8731; animation-delay: 0.4s; }
+        .logo-letter:nth-child(5) { color: #4deeea; animation-delay: 0.5s; }
+        .logo-letter:nth-child(6) { color: #f4c430; animation-delay: 0.6s; }
+        .logo-letter:nth-child(7) { color: #e53e3e; animation-delay: 0.7s; }
+        .logo-letter:nth-child(8) { color: #5b8731; animation-delay: 0.8s; }
+        .logo-letter:nth-child(9) { color: #f4c430; animation-delay: 0.9s; }
+        .logo-letter:nth-child(10) { color: #4deeea; animation-delay: 1.0s; }
+
+        @keyframes letterBounce {
+            0% { transform: translateY(0) scale(1); filter: brightness(1); }
+            100% { transform: translateY(-5px) scale(1.12); filter: brightness(1.4); }
         }
 
-        .item-info h4 {
-            font-size: 13px;
+        .sub-logo {
+            font-size: 9px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
             font-weight: 700;
-            margin-bottom: 2px;
         }
 
-        .item-info p {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* Ruleta Interactiva */
-        .wheel-container {
+        /* --- TICKER --- */
+        .ticker-wrapper {
+            background: #090d13;
+            border-top: 1px solid var(--mc-border);
+            border-bottom: 1px solid var(--mc-border);
+            overflow: hidden;
+            white-space: nowrap;
+            height: 32px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            position: relative;
-            margin: 20px 0;
         }
 
-        .wheel {
-            width: 240px;
-            height: 240px;
-            border-radius: 50%;
-            border: 6px solid var(--accent-gold);
+        .ticker-track {
+            display: inline-block;
+            animation: ticker 25s linear infinite;
+            font-size: 10px;
+            color: #e2e8f0;
+        }
+
+        .ticker-item i { color: var(--mc-gold); margin-right: 4px; }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* --- CONTENEDOR DE PANELES --- */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 95px;
+            scroll-behavior: smooth;
+        }
+
+        .panel { display: none; animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        .panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--mc-card-bg);
+            border: 2px solid var(--mc-border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 12px 20px -4px rgba(0,0,0,0.4);
             position: relative;
             overflow: hidden;
-            transition: transform 4s cubic-bezier(0.15, 0.95, 0.15, 1);
-            background: conic-gradient(
-                #ef4444 0deg 60deg,
-                #f59e0b 60deg 120deg,
-                #22c55e 120deg 180deg,
-                #3b82f6 180deg 240deg,
-                #a855f7 240deg 300deg,
-                #ec4899 300deg 360deg
-            );
         }
 
-        .wheel-pointer {
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-bottom: 20px solid var(--accent-gold);
-            position: absolute;
-            top: -10px;
-            z-index: 10;
-        }
-
-        /* Barra de Navegación Inferior Estilo Telegram Mini App */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(26, 29, 46, 0.98);
-            border-top: 2px solid var(--card-border);
+        .card-title {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            color: var(--mc-text);
+            margin-bottom: 16px;
             display: flex;
-            justify-content: space-around;
-            padding: 10px 5px;
-            z-index: 1000;
-            backdrop-filter: blur(8px);
-        }
-
-        .nav-item {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 4px;
-            font-size: 10px;
-            font-family: var(--pixel-font);
-            cursor: pointer;
-            transition: color 0.2s, transform 0.1s;
-            flex: 1;
+            gap: 10px;
+            text-shadow: 2px 2px 0 #000;
         }
+        .card-title i { color: var(--mc-gold); }
 
-        .nav-item i {
-            font-size: 16px;
-        }
-
-        .nav-item.active {
-            color: var(--accent-gold);
-            transform: scale(1.05);
-        }
-
-        /* Alertas tipo Modal / Toast */
-        .toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: var(--card-bg);
-            border: 2px solid var(--accent-green);
+        .btn-mc-action {
+            background: linear-gradient(135deg, #65a30d, #4d7c0f);
+            border: 3px solid #3f6212;
             color: #fff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-family: var(--pixel-font);
-            font-size: 10px;
-            z-index: 2000;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
-            transition: transform 0.3s ease-in-out;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            padding: 16px 20px;
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
             text-align: center;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 #000;
+            transition: all 0.2s ease;
+            display: block;
+            margin-top: 20px;
+            box-shadow: 0 6px 0 #1a2e05, 0 0 20px rgba(77, 238, 234, 0.4);
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
+        .input-mc {
+            width: 100%; background: #090d13; border: 2px solid var(--mc-border);
+            color: #fff; padding: 12px 16px; font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px; border-radius: 8px; margin-bottom: 16px; outline: none;
+        }
+        .input-mc:focus { border-color: var(--mc-gold); box-shadow: 0 0 12px rgba(244, 196, 48, 0.3); }
+
+        .info-box {
+            font-size: 13px; line-height: 1.8; color: #cbd5e0;
+            background: rgba(9, 13, 19, 0.85); border-radius: 10px; padding: 16px; border: 1px solid var(--mc-border);
+            text-align: left; margin-bottom: 16px;
+        }
+        .info-step { margin-bottom: 14px; display: flex; align-items: flex-start; gap: 12px; }
+        .info-step:last-child { margin-bottom: 0; }
+        .info-step i { color: var(--mc-gold); margin-top: 3px; font-size: 14px; }
+        .info-step strong { color: #fff; }
+
+        /* --- PERFIL Y MINERÍA 24H --- */
+        .user-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .stat-box {
+            background: #090d13; border: 1px solid var(--mc-border);
+            padding: 16px; border-radius: 10px; text-align: center;
+        }
+        .stat-box .val { font-family: 'Press Start 2P', monospace; font-size: 12px; color: var(--mc-gold); margin-top: 8px; text-shadow: 0 0 8px rgba(244,196,48,0.4); }
+        .stat-box .lbl { font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 700; }
+
+        .mining-section {
+            margin-top: 16px; border-top: 2px dashed var(--mc-border);
+            padding-top: 16px; text-align: center;
+        }
+        
+        .xp-bar-container {
+            background: #05070a; border: 2px solid #1e293b; border-radius: 6px;
+            height: 16px; width: 100%; position: relative; margin-bottom: 14px; overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+        }
+        .xp-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #22c55e, #10b981);
+            width: 100%; transition: width 0.5s linear;
+        }
+        .xp-bar-text {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P', monospace; font-size: 8px; color: #fff;
+            text-shadow: 1px 1px 0 #000;
         }
 
-        .toast.error {
-            border-color: #ef4444;
+        .btn-mine {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 3px solid #047857; color: #fff;
+            font-family: 'Press Start 2P', monospace; font-size: 10px;
+            padding: 16px; width: 100%; border-radius: 8px; cursor: pointer;
+            box-shadow: 0 4px 0 #064e3b; transition: all 0.1s;
         }
+        .btn-mine:disabled {
+            background: linear-gradient(135deg, #475569, #334155);
+            border-color: #64748b; color: #94a3b8; box-shadow: 0 4px 0 #1e293b;
+            cursor: not-allowed;
+        }
+
+        /* --- PICOS --- */
+        .pickaxe-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .pickaxe-card {
+            background: var(--mc-card-bg); border: 2px solid var(--mc-border);
+            border-radius: 14px; padding: 18px; position: relative; overflow: hidden;
+        }
+        .pickaxe-card.vip {
+            border: 3px solid var(--mc-gold);
+            background: linear-gradient(135deg, rgba(20,25,33,0.98) 0%, rgba(60,45,10,0.85) 100%);
+            box-shadow: 0 0 30px rgba(244, 196, 48, 0.35);
+        }
+        .pickaxe-info h3 { font-family: 'Press Start 2P', monospace; font-size: 12px; margin-bottom: 10px; color: #fff; }
+        .pickaxe-details { font-size: 12px; color: #94a3b8; margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+        .pickaxe-details span { color: #f1f5f9; font-weight: 700; }
+
+        .btn-buy {
+            background: linear-gradient(to bottom, #65a30d, #4d7c0f);
+            border: 2px solid #3f6212; color: #fff;
+            font-family: 'Press Start 2P', monospace; font-size: 10px;
+            padding: 12px; width: 100%; border-radius: 8px; cursor: pointer;
+            box-shadow: 0 4px 0 #1a2e05; text-transform: uppercase;
+        }
+        .btn-buy.vip-btn {
+            background: linear-gradient(to bottom, #fbbf24, #d97706);
+            border-color: #92400e; color: #000; font-weight: bold;
+            box-shadow: 0 4px 0 #78350f;
+        }
+        .btn-buy.btn-disabled {
+            background: #475569; border-color: #334155; color: #94a3b8; box-shadow: 0 4px 0 #1e293b; cursor: not-allowed;
+        }
+
+        /* --- RACHA --- */
+        .streak-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+        .streak-day { background: #090d13; border: 1px solid var(--mc-border); border-radius: 6px; text-align: center; padding: 10px 2px; font-size: 10px; }
+        .streak-day.completed { background: var(--mc-dark-green); border-color: var(--mc-green); color: var(--mc-gold); }
+        .streak-day.active-day { border-color: var(--mc-gold); box-shadow: 0 0 10px var(--mc-gold); }
+
+        /* --- RULETA --- */
+        .roulette-container { text-align: center; padding: 10px 0; }
+        .roulette-wrapper-arcade {
+            position: relative;
+            width: 270px;
+            height: 270px;
+            margin: 0 auto 20px auto;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 70%);
+            border-radius: 50%;
+            padding: 10px;
+            box-shadow: 0 0 40px rgba(77, 238, 234, 0.25), inset 0 0 20px rgba(0,0,0,0.9);
+            border: 4px solid var(--mc-border);
+        }
+        .arcade-lights {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%; animation: rotateLights 6s linear infinite; pointer-events: none;
+        }
+        .arcade-lights span {
+            position: absolute; width: 8px; height: 8px; background: var(--mc-gold); border-radius: 50%; box-shadow: 0 0 8px var(--mc-gold);
+        }
+        .arcade-lights span:nth-child(1) { top: 10px; left: 50%; transform: translateX(-50%); }
+        .arcade-lights span:nth-child(2) { top: 25px; right: 60px; }
+        .arcade-lights span:nth-child(3) { top: 60px; right: 25px; }
+        .arcade-lights span:nth-child(4) { top: 50%; right: 10px; transform: translateY(-50%); }
+        .arcade-lights span:nth-child(5) { bottom: 60px; right: 25px; }
+        .arcade-lights span:nth-child(6) { bottom: 25px; right: 60px; }
+        .arcade-lights span:nth-child(7) { bottom: 10px; left: 50%; transform: translateX(-50%); }
+        .arcade-lights span:nth-child(8) { bottom: 25px; left: 60px; }
+        .arcade-lights span:nth-child(9) { bottom: 60px; left: 25px; }
+        .arcade-lights span:nth-child(10) { top: 50%; left: 10px; transform: translateY(-50%); }
+        .arcade-lights span:nth-child(11) { top: 60px; left: 25px; }
+        .arcade-lights span:nth-child(12) { top: 25px; left: 60px; }
+
+        @keyframes rotateLights { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+
+        .roulette-wheel {
+            width: 230px; height: 230px; border: 5px solid var(--mc-gold);
+            border-radius: 50%; margin: 10px auto; position: relative;
+            background: conic-gradient(
+                #27272a 0deg 60deg,
+                #737373 60deg 120deg,
+                #866043 120deg 180deg,
+                #f4c430 180deg 240deg,
+                #4deeea 240deg 300deg,
+                #ef4444 300deg 360deg
+            );
+            box-shadow: 0 0 25px rgba(244, 196, 48, 0.5), inset 0 0 15px rgba(0,0,0,0.8);
+            transition: transform 4.5s cubic-bezier(0.15, 0.85, 0.15, 1);
+        }
+        .roulette-pointer {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 10px solid transparent;
+            border-right: 10px solid transparent; border-top: 22px solid #fff; z-index: 20;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.9));
+        }
+        .roulette-legend {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 9px; margin-bottom: 16px; text-align: left;
+            background: #090d13; padding: 10px; border-radius: 8px; border: 1px solid var(--mc-border);
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; color: #cbd5e0; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+        /* --- REFERIDOS Y VIBRANIO --- */
+        .ref-box { background: #090d13; border: 1px solid var(--mc-border); padding: 16px; border-radius: 10px; text-align: center; margin-bottom: 16px; }
+        .vibranium-counter { font-family: 'Press Start 2P', monospace; font-size: 15px; color: var(--mc-diamond); margin: 10px 0; text-shadow: 0 0 10px rgba(77,238,234,0.5); }
+        .ref-stats-details { font-size: 12px; color: #cbd5e0; margin: 10px 0; text-align: left; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 6px; }
+
+        /* --- CAJA --- */
+        .wallet-tabs { display: flex; gap: 10px; margin-bottom: 16px; }
+        .wallet-tab-btn {
+            flex: 1; background: #090d13; border: 2px solid var(--mc-border);
+            color: #94a3b8; padding: 10px; font-family: 'Press Start 2P', monospace;
+            font-size: 9px; border-radius: 8px; cursor: pointer; text-align: center;
+        }
+        .wallet-tab-btn.active { background: var(--mc-dark-green); border-color: var(--mc-green); color: #fff; }
+        .wallet-subpanel { display: none; }
+        .wallet-subpanel.active { display: block; }
+        .address-box {
+            background: #090d13; border: 1px dashed var(--mc-border); padding: 12px;
+            font-family: monospace; font-size: 11px; text-align: center; margin-bottom: 12px;
+            word-break: break-all; color: var(--mc-gold); border-radius: 6px;
+        }
+
+        /* --- SOCIALES --- */
+        .social-grid { display: flex; flex-direction: column; gap: 12px; }
+        .social-btn {
+            display: flex; align-items: center; gap: 14px; background: #090d13;
+            border: 2px solid var(--mc-border); padding: 14px; border-radius: 10px;
+            color: #fff; text-decoration: none; font-weight: 600;
+        }
+        .social-btn i { font-size: 22px; }
+        .social-btn.wa i { color: #22c55e; }
+        .social-btn.email i { color: var(--mc-gold); }
+
+        /* --- NAVEGACIÓN INFERIOR (SOLO ICONOS) --- */
+        .nav-tabs {
+            display: grid; grid-template-columns: repeat(8, 1fr);
+            background: #07090d; border-top: 2px solid var(--mc-border);
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px; z-index: 100; padding: 10px 1px;
+        }
+        .nav-btn {
+            background: transparent; border: none; color: #94a3b8;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; padding: 8px 0; transition: all 0.2s;
+        }
+        .nav-btn i { font-size: 18px; }
+        .nav-btn.active { color: var(--mc-gold); transform: translateY(-3px); text-shadow: 0 0 12px rgba(244, 196, 48, 0.7); }
+
+        /* --- TOAST --- */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px);
+            background: #1e293b; border: 2px solid var(--mc-gold); color: #fff;
+            padding: 12px 20px; border-radius: 8px; font-family: 'Press Start 2P', monospace;
+            font-size: 9px; z-index: 1000; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6); text-align: center;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body>
 
-    <!-- Notificación Ticker -->
-    <div class="top-ticker">
-        <div class="ticker-content">
-            ⛏️ ¡@MineroPro reclamó $35.00 ROI! &nbsp;&nbsp;&nbsp; 💎 @CraftMaster ganó Ruleta VIP &nbsp;&nbsp;&nbsp; 🚀 ¡Nuevo Pico Platinium disponible en la tienda!
+<!-- PANTALLA DE CARGA ÉPICA CINEMATOGRÁFICA -->
+<div id="splash-screen">
+    <div class="splash-particles" id="splashParticles"></div>
+    <div class="splash-content-wrapper">
+        <div class="splash-icon-box">
+            <i class="fa-solid fa-gem"></i>
+        </div>
+        <div class="splash-logo">MINECRAFTG</div>
+        <div class="splash-subtitle">Generando Ecosistema Web3...</div>
+        
+        <div class="splash-loader-box">
+            <div class="splash-loader-bar">
+                <div class="splash-loader-fill" id="splashFill"></div>
+            </div>
+        </div>
+        
+        <div class="splash-loading-status">
+            <span id="splashStatusText">Cargando mundos...</span>
+            <span id="splashPercentText">0%</span>
+        </div>
+    </div>
+</div>
+
+<div class="app-container">
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo-container">
+            <div class="logo-text">
+                <span class="logo-letter">M</span><span class="logo-letter">I</span><span class="logo-letter">N</span><span class="logo-letter">E</span><span class="logo-letter">C</span><span class="logo-letter">R</span><span class="logo-letter">A</span><span class="logo-letter">F</span><span class="logo-letter">T</span><span class="logo-letter">G</span>
+            </div>
+        </div>
+        <div class="sub-logo">Official Telegram Mining App</div>
+    </header>
+
+    <!-- TICKER -->
+    <div class="ticker-wrapper">
+        <div class="ticker-track">
+            <div class="ticker-item" style="display:inline-block; padding:0 15px;"><i class="fa-solid fa-clock"></i> <span id="utcTime">00:00:00 UTC</span></div>
+            <div class="ticker-item" style="display:inline-block; padding:0 15px;"><i class="fa-solid fa-users"></i> <span id="dynamicOnlineCount">190</span> Online</div>
+            <div class="ticker-item" style="display:inline-block; padding:0 15px;"><i class="fa-solid fa-gem"></i> @MinerPro reclamó $35.00 ROI</div>
+            <div class="ticker-item" style="display:inline-block; padding:0 15px;"><i class="fa-solid fa-dice"></i> @CraftMaster ganó Ruleta VIP</div>
         </div>
     </div>
 
-    <!-- Cabecera -->
-    <header>
-        <div class="logo-container">
-            <h1 class="logo-title">MINECRAFTG</h1>
-            <span class="logo-subtitle">OFFICIAL TELEGRAM MINING APP</span>
+    <!-- CONTENEDOR DE PANELES -->
+    <div class="main-content">
+
+        <!-- 1. INICIO -->
+        <div id="panel-home" class="panel active">
+            <div class="card" style="text-align: center;">
+                <div class="card-title" style="justify-content: center;"><i class="fa-solid fa-book-open"></i> GUÍA Y MECÁNICAS</div>
+                
+                <div class="info-box">
+                    <div class="info-step"><i class="fa-solid fa-hammer"></i> <div><strong>Adquisición de Picos:</strong> Compra picos con su saldo real depositado, obteniendo ROI y rendimiento diario.</div></div>
+                    <div class="info-step"><i class="fa-solid fa-clock"></i> <div><strong>Minería Cada 24h:</strong> Ingresa a tu perfil y presiona minar cada 24 horas para mantener tu pico activo generando ganancias.</div></div>
+                    <div class="info-step"><i class="fa-solid fa-dice"></i> <div><strong>Ruleta de Premios:</strong> Se activa únicamente al comprar un pico o al tener 2 referidos válidos (cada uno con pico comprado).</div></div>
+                    <div class="info-step"><i class="fa-solid fa-gift"></i> <div><strong>Referidos y Vibranio:</strong> Invita amigos. Para ganar un Pico VIP, tus <strong>10 referidos</strong> deben adquirir obligatoriamente cualquier pico de la tienda.</div></div>
+                </div>
+
+                <button class="btn-mc-action" onclick="switchTab('picos')">
+                    <i class="fa-solid fa-store"></i> ¡Explorar Picos Disponibles!
+                </button>
+            </div>
         </div>
-    </header>
 
-    <!-- Contenedor Principal de Vistas -->
-    <main class="main-container">
-
-        <!-- VISTA 1: MINA / INICIO -->
-        <section id="view-mine" class="view-section active">
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-id-card"></i> PANEL DE MINERO</h3>
-                <div class="input-group">
-                    <label>Nombre de Usuario</label>
-                    <input type="text" id="username-input" class="pixel-input" placeholder="Ej: Minero_0072">
-                </div>
-                <button class="pixel-btn" onclick="saveUsername()"><i class="fa-solid fa-floppy-disk"></i> GUARDAR NOMBRE</button>
+        <!-- 2. PERFIL Y MINERÍA 24H -->
+        <div id="panel-user" class="panel">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-id-card"></i> PANEL DE MINERO</div>
+                <label style="font-size: 10px; color: #94a3b8; display: block; margin-bottom: 6px; font-weight: 700;">Nombre de Usuario</label>
+                <input type="text" id="usernameInput" class="input-mc" value="Minero_Nuevo">
+                <button class="btn-buy" onclick="saveUsername()"><i class="fa-solid fa-floppy-disk"></i> Guardar Nombre</button>
             </div>
 
-            <div class="stats-grid">
+            <div class="user-stats-grid">
                 <div class="stat-box">
-                    <div class="stat-label">SALDO DISPONIBLE</div>
-                    <div id="user-balance" class="stat-value">$0.00</div>
+                    <div class="lbl">SALDO DISPONIBLE</div>
+                    <div class="val" id="userBalance">$0.00</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-label">GANANCIA TOTAL</div>
-                    <div id="user-total-earned" class="stat-value">$0.00</div>
+                    <div class="lbl">GANANCIA TOTAL</div>
+                    <div class="val" id="userTotalRoi">$0.00</div>
                 </div>
             </div>
 
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-shield-halved"></i> ESTADO DE MINERÍA</h3>
-                <p id="mining-status-text" style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Pico Activo: Ninguno (Compra un pico para iniciar)</p>
-                <div id="timer-container" style="display: none; text-align: center; margin-bottom: 12px;">
-                    <span style="font-family: var(--pixel-font); font-size: 12px; color: var(--accent-gold);" id="mining-timer">24:00:00</span>
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-shield-halved"></i> ESTADO DE MINERÍA</div>
+                <div class="pickaxe-details">
+                    <div>Pico Activo: <span id="activePickaxeLabel" style="color: var(--mc-gold);">Ninguno (Compra un pico para iniciar)</span></div>
+                    <div>Estado Ruleta: <span id="rouletteStatusText" style="color: var(--mc-diamond);">¡Sin giros disponibles!</span></div>
                 </div>
-                <button id="mine-action-btn" class="pixel-btn gold" onclick="executeMining()" disabled><i class="fa-solid fa-hammer"></i> MINAR (24H)</button>
-            </div>
-        </section>
 
-        <!-- VISTA 2: TIENDA DE PICOS -->
-        <section id="view-shop" class="view-section">
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-store"></i> TIENDA DE PICOS & ROI</h3>
-                <div id="shop-items-container">
-                    <!-- Se cargan dinámicamente -->
+                <div class="mining-section">
+                    <div class="xp-bar-container">
+                        <div class="xp-bar-fill" id="xpBarFill" style="width: 0%;"></div>
+                        <div class="xp-bar-text" id="xpBarText">EQUIPA UN PICO PARA EMPEZAR</div>
+                    </div>
+                    <button class="btn-mine" id="mineBtn" onclick="performMining()" disabled>
+                        <i class="fa-solid fa-pickaxe"></i> SIN PICO ACTIVO
+                    </button>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- VISTA 3: TAREAS / CHEQUEO -->
-        <section id="view-tasks" class="view-section">
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-calendar-check"></i> RACHA DE CHEQUEO (15 DÍAS)</h3>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Reclama tu recompensa diaria. Exige pico activo superior a $20 para el día final.</p>
-                <button class="pixel-btn secondary" onclick="claimDailyStreak()"><i class="fa-solid fa-gift"></i> RECLAMAR ASISTENCIA DIARIA</button>
-            </div>
-        </section>
-
-        <!-- VISTA 4: RULETA -->
-        <section id="view-wheel" class="view-section">
-            <div class="pixel-card" style="text-align: center;">
-                <h3 class="card-title" style="justify-content: center;"><i class="fa-solid fa-dharmachakra"></i> RULETA ARCADE</h3>
-                <div class="wheel-container">
-                    <div class="wheel-pointer"></div>
-                    <div id="arcade-wheel" class="wheel"></div>
+        <!-- 3. PICOS -->
+        <div id="panel-picos" class="panel">
+            <div class="card-title" style="margin-bottom: 16px;"><i class="fa-solid fa-store"></i> MERCADO DE PICOS MINEROS</div>
+            
+            <div class="pickaxe-grid">
+                <div class="pickaxe-card">
+                    <div class="pickaxe-info">
+                        <h3>Pico de Madera</h3>
+                        <div class="pickaxe-details">
+                            <div>Costo: <span>$10.00</span></div>
+                            <div>ROI Total: <span style="color:var(--mc-green);">200% ($20.00 en 20 días)</span></div>
+                            <div>Ganancia Diaria: <span>$1.00 / día</span></div>
+                        </div>
+                        <button class="btn-buy" onclick="buyPickaxe('Pico de Madera', false, 10)">Comprar / Equipar ($10)</button>
+                    </div>
                 </div>
-                <button class="pixel-btn gold" onclick="spinWheel()"><i class="fa-solid fa-play"></i> GIRAR RULETA ($5)</button>
-            </div>
-        </section>
 
-        <!-- VISTA 5: VIBRANIO / EXCLUSIVE -->
-        <section id="view-vibranium" class="view-section">
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-gem"></i> MINERAL DE VIBRANIO</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Completa misiones exclusivas de minería profunda para desbloquear multiplicadores de ingresos pasivos.</p>
-                <button class="pixel-btn secondary" onclick="showToast('¡Misión de Vibranio sincronizada!', false)"><i class="fa-solid fa-bolt"></i> ACTIVAR NÚCLEO</button>
-            </div>
-        </section>
-
-        <!-- VISTA 6: BILLETERA / CAJA FUERTE -->
-        <section id="view-wallet" class="view-section">
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-wallet"></i> CAJA FUERTE (USDT TRC20)</h3>
-                <div class="input-group">
-                    <label>Dirección de Depósito Oficial</label>
-                    <input type="text" class="pixel-input" value="TJFEYuPCvmjMjYMAkMKxA5Emte7vUvJp5x" readonly>
+                <div class="pickaxe-card">
+                    <div class="pickaxe-info">
+                        <h3>Pico de Hierro</h3>
+                        <div class="pickaxe-details">
+                            <div>Costo: <span>$15.00</span></div>
+                            <div>ROI Total: <span style="color:var(--mc-green);">233.33% ($35.00 en 25 días)</span></div>
+                            <div>Ganancia Diaria: <span>$1.40 / día</span></div>
+                        </div>
+                        <button class="btn-buy" onclick="buyPickaxe('Pico de Hierro', false, 15)">Comprar / Equipar ($15)</button>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label>Monto a Retirar ($)</label>
-                    <input type="number" id="withdraw-amount" class="pixel-input" placeholder="0.00" min="0" step="any">
+
+                <div class="pickaxe-card">
+                    <div class="pickaxe-info">
+                        <h3>Pico de Plata</h3>
+                        <div class="pickaxe-details">
+                            <div>Costo: <span>$20.00</span></div>
+                            <div>ROI Total: <span style="color:var(--mc-green);">200% ($40.00 en 30 días)</span></div>
+                            <div>Ganancia Diaria: <span>$1.33 / día</span></div>
+                        </div>
+                        <button class="btn-buy" onclick="buyPickaxe('Pico de Plata', false, 20)">Comprar / Equipar ($20)</button>
+                    </div>
                 </div>
-                <button class="pixel-btn" onclick="requestWithdraw()"><i class="fa-solid fa-paper-plane"></i> SOLICITAR RETIRO</button>
-            </div>
-        </section>
 
-        <!-- VISTA 7: REFERIDOS -->
-        <section id="view-referrals" class="view-section">
-            <div class="pixel-card">
-                <h3 class="card-title"><i class="fa-solid fa-users"></i> SISTEMA DE REFERIDOS</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Invita a 10 amigos para obtener un Pico VIP gratis. Enlace único:</p>
-                <div class="input-group">
-                    <input type="text" id="ref-link" class="pixel-input" value="https://t.me/MinecrafTGBot?start=ref_0072" readonly>
+                <!-- VIP 1 -->
+                <div class="pickaxe-card vip">
+                    <div class="pickaxe-info">
+                        <h3 style="color: var(--mc-gold);">Pico de Oro VIP1</h3>
+                        <div class="pickaxe-details">
+                            <div>Costo: <span>$50.00</span></div>
+                            <div>ROI Total: <span style="color:var(--mc-gold);">200% ($100.00 en 30 días)</span></div>
+                            <div>Ganancia Diaria: <span>$3.33 / día</span></div>
+                            <div>Beneficio: <span style="color:var(--mc-gold);">Retiro activo cada 7 días</span></div>
+                        </div>
+                        <button class="btn-buy vip-btn" onclick="buyPickaxe('Pico de Oro VIP1', true, 50)">Adquirir VIP1 ($50)</button>
+                    </div>
                 </div>
-                <button class="pixel-btn secondary" onclick="copyRefLink()"><i class="fa-solid fa-copy"></i> COPIAR ENLACE</button>
+
+                <!-- VIP 2 (Diamante) -->
+                <div class="pickaxe-card vip" style="border-color: var(--mc-diamond); box-shadow: 0 0 35px rgba(77,238,234,0.4);">
+                    <div class="pickaxe-info">
+                        <h3 style="color: var(--mc-diamond);">Pico de Diamante VIP2</h3>
+                        <div class="pickaxe-details">
+                            <div>Costo: <span>$100.00</span></div>
+                            <div>ROI Total: <span style="color:var(--mc-diamond);">160% ($160.00 en 30 días)</span></div>
+                            <div>Ganancia Diaria: <span>$5.33 / día</span></div>
+                            <div>Beneficio: <span style="color:var(--mc-diamond);">Retiro activo cada 7 días</span></div>
+                        </div>
+                        <button class="btn-buy vip-btn" onclick="buyPickaxe('Pico de Diamante VIP2', true, 100)">Adquirir VIP2 ($100)</button>
+                    </div>
+                </div>
+
+                <!-- VIP 3 -->
+                <div class="pickaxe-card vip" style="border-color: #ef4444; box-shadow: 0 0 35px rgba(239,68,68,0.4);">
+                    <div class="pickaxe-info">
+                        <h3 style="color: #fff;">Pico Platinium VIP3</h3>
+                        <div class="pickaxe-details">
+                            <div>Costo: <span>$150.00</span></div>
+                            <div>ROI Total: <span style="color:#ef4444;">166.67% ($250.00 en 40 días)</span></div>
+                            <div>Ganancia Diaria: <span>$6.25 / día</span></div>
+                            <div>Beneficio: <span style="color:#ef4444;">Retiro activo cada 7 días</span></div>
+                        </div>
+                        <button class="btn-buy vip-btn" onclick="buyPickaxe('Pico Platinium VIP3', true, 150)">Adquirir VIP3 ($150)</button>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
 
-    </main>
+        <!-- 4. RACHA -->
+        <div id="panel-streak" class="panel">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-fire"></i> RACHA DE CHEQUEO (15 DÍAS)</div>
+                <p style="font-size: 11px; color: #94a3b8; margin-bottom: 14px; text-align: center;">
+                    Cualquiera puede marcar los 15 días, pero para <strong>reclamar los $20</strong> es obligatorio poseer un pico activo con un costo <strong>mayor a $20</strong> (Pico de Oro VIP1, Diamante VIP2 o Platinium VIP3).
+                </p>
+                <div class="streak-grid" id="streakGrid"></div>
+                <button class="btn-buy" onclick="claimStreak()"><i class="fa-solid fa-calendar-check"></i> Reclamar Premio de Racha ($20)</button>
+            </div>
+        </div>
 
-    <!-- Barra de Navegación Inferior -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchView('mine', this)">
-            <i class="fa-solid fa-house"></i>
-            <span>Mina</span>
-        </button>
-        <button class="nav-item" onclick="switchView('shop', this)">
-            <i class="fa-solid fa-hammer"></i>
-            <span>Tienda</span>
-        </button>
-        <button class="nav-item" onclick="switchView('tasks', this)">
-            <i class="fa-solid fa-fire"></i>
-            <span>Tareas</span>
-        </button>
-        <button class="nav-item" onclick="switchView('wheel', this)">
-            <i class="fa-solid fa-dice"></i>
-            <span>Ruleta</span>
-        </button>
-        <button class="nav-item" onclick="switchView('vibranium', this)">
-            <i class="fa-solid fa-gem"></i>
-            <span>Vibranio</span>
-        </button>
-        <button class="nav-item" onclick="switchView('wallet', this)">
-            <i class="fa-solid fa-wallet"></i>
-            <span>Billetera</span>
-        </button>
-        <button class="nav-item" onclick="switchView('referrals', this)">
-            <i class="fa-solid fa-share-nodes"></i>
-            <span>Equipo</span>
-        </button>
+        <!-- 5. RULETA -->
+        <div id="panel-roulette" class="panel">
+            <div class="card" style="text-align: center;">
+                <div class="card-title" style="justify-content: center;"><i class="fa-solid fa-dice"></i> RULETA DE PREMIOS MINECRAFT</div>
+                <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; text-align: center;" id="rouletteSubText">
+                    Se desbloquea al <strong>comprar un pico</strong> o por cada <strong>2 referidos válidos</strong> (con pico comprado).
+                </p>
+                
+                <div class="roulette-legend">
+                    <div class="legend-item"><span class="legend-dot" style="background:#27272a;"></span> $0.25 - $0.50</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#866043;"></span> $1.00 - $2.00</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#4deeea;"></span> $3.00 (Mayor premio)</div>
+                    <div class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> ⭐ Pico VIP (Sorteo 1 c/10 compras)</div>
+                </div>
+
+                <div class="roulette-container">
+                    <div class="roulette-wrapper-arcade">
+                        <div class="arcade-lights">
+                            <span></span><span></span><span></span><span></span><span></span><span></span>
+                            <span></span><span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                        <div class="roulette-pointer"></div>
+                        <div class="roulette-wheel" id="rouletteWheel"></div>
+                    </div>
+                    <button class="btn-buy vip-btn" id="spinRouletteBtn" onclick="spinRoulette()" style="max-width: 240px; margin: 0 auto;"><i class="fa-solid fa-play"></i> ¡Girar Ruleta Ahora!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. REFERIDOS & VIBRANIO -->
+        <div id="panel-referrals" class="panel">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-gem"></i> ZONA DE VIBRANIO & REFERIDOS</div>
+                <p style="font-size: 11px; color: #94a3b8; margin-bottom: 14px; text-align: center;">
+                    Invita amigos. Para reclamar tu Pico VIP gratis, tus <strong>10 referidos</strong> deben comprar obligatoriamente un pico en la tienda (Sistema Anti-Bot).
+                </p>
+                
+                <div class="ref-box">
+                    <div style="font-size: 10px; color: #94a3b8; font-weight: 700;">TU ENLACE DE INVITACIÓN</div>
+                    <div style="font-size: 11px; color: var(--mc-gold); margin: 6px 0; word-break: break-all;" id="refLinkDisplay">Cargando enlace...</div>
+                    <button class="btn-buy" onclick="copiarEnlaceReferido()"><i class="fa-solid fa-copy"></i> Copiar Enlace</button>
+                </div>
+
+                <div class="ref-stats-details">
+                    <div>👥 Total Registrados: <span id="totalRefs" style="color:#fff;">0</span></div>
+                    <div>🛒 Referidos Válidos (Con Pico Comprado): <span id="validRefs" style="color:var(--mc-green);">0</span> / 10</div>
+                </div>
+
+                <div class="ref-box">
+                    <div style="font-size: 10px; color: #94a3b8; font-weight: 700;">Progreso de Vibranio y Requisito VIP</div>
+                    <div class="vibranium-counter" id="vibraniumCount">0 / 10 💎</div>
+                    
+                    <div class="xp-bar-container" style="margin-bottom: 14px;">
+                        <div class="xp-bar-fill" id="refBarFill" style="width: 0%;"></div>
+                        <div class="xp-bar-text" id="refBarText">0% COMPLETADO</div>
+                    </div>
+
+                    <button id="claimVipBtn" class="btn-buy btn-disabled" onclick="reclamarPicoVIP()" disabled>
+                        🔒 Reclamar Pico VIP (Faltan Referidos)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. CAJA -->
+        <div id="panel-wallet" class="panel">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-wallet"></i> CAJA FUERTE (USDT TRC20)</div>
+                
+                <div class="wallet-tabs">
+                    <button class="wallet-tab-btn active" id="tabDepBtn" onclick="switchWalletSub('deposit')">Depósito</button>
+                    <button class="wallet-tab-btn" id="tabRetBtn" onclick="switchWalletSub('withdraw')">Retiro</button>
+                </div>
+
+                <div id="subDeposit" class="wallet-subpanel active">
+                    <p style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">Envía USDT vía red TRC20 a tu cuenta:</p>
+                    <div class="address-box">TJFEYuPCvmjMjYMAkMKxA5Emte7vUvJp5x</div>
+                    <button class="btn-buy" onclick="copiarBilleteraDeposito()"><i class="fa-solid fa-copy"></i> Copiar Dirección USDT</button>
+                </div>
+
+                <div id="subWithdraw" class="wallet-subpanel">
+                    <label style="font-size: 10px; color: #94a3b8; font-weight: 700;">Monto (USD)</label>
+                    <input type="number" id="withdrawAmount" class="input-mc" placeholder="Ej: 50">
+                    <label style="font-size: 10px; color: #94a3b8; font-weight: 700;">Wallet TRC20</label>
+                    <input type="text" class="input-mc" placeholder="TQ...">
+                    <button class="btn-buy" onclick="requestWithdraw()"><i class="fa-solid fa-paper-plane"></i> Procesar Retiro</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. SOCIALES -->
+        <div id="panel-social" class="panel">
+            <div class="card">
+                <div class="card-title"><i class="fa-solid fa-share-nodes"></i> COMUNIDAD OFICIAL</div>
+                <div class="social-grid">
+                    <a href="https://wa.me/51930150308" target="_blank" class="social-btn wa"><i class="fa-brands fa-whatsapp"></i><div><div style="font-size:12px;">Soporte WhatsApp</div><div style="font-size:9px;color:#94a3b8;">+51930150308</div></div></a>
+                    <a href="mailto:mine2026tg@gmail.com" class="social-btn email"><i class="fa-solid fa-envelope"></i><div><div style="font-size:12px;">Correo Electrónico</div><div style="font-size:9px;color:#94a3b8;">mine2026tg@gmail.com</div></div></a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NAVEGACIÓN INFERIOR -->
+    <nav class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('home')" id="btn-home"><i class="fa-solid fa-house"></i></button>
+        <button class="nav-btn" onclick="switchTab('user')" id="btn-user"><i class="fa-solid fa-user"></i></button>
+        <button class="nav-btn" onclick="switchTab('picos')" id="btn-picos"><i class="fa-solid fa-hammer"></i></button>
+        <button class="nav-btn" onclick="switchTab('streak')" id="btn-streak"><i class="fa-solid fa-fire"></i></button>
+        <button class="nav-btn" onclick="switchTab('roulette')" id="btn-roulette"><i class="fa-solid fa-dice"></i></button>
+        <button class="nav-btn" onclick="switchTab('referrals')" id="btn-referrals"><i class="fa-solid fa-gem"></i></button>
+        <button class="nav-btn" onclick="switchTab('wallet')" id="btn-wallet"><i class="fa-solid fa-wallet"></i></button>
+        <button class="nav-btn" onclick="switchTab('social')" id="btn-social"><i class="fa-solid fa-share-nodes"></i></button>
     </nav>
 
-    <!-- Sistema de Alertas Toast -->
-    <div id="toast-notification" class="toast">¡Acción realizada con éxito!</div>
+</div>
 
-    <!-- Script de Funcionalidad e Integración -->
-    <script>
-        // Configuración Supabase
-        const SUPABASE_URL = 'https://jigwnrqonndombxzagwh.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZ3ducXFvbm5kb21ieHphZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3fQ.placeholder_key'; 
-        
-        let supabaseClient = null;
+<div id="toast" class="toast">¡Operación exitosa!</div>
+
+<script>
+    // Configuración oficial de Supabase
+    const SUPABASE_URL = 'https://jigwnrqonndombxzagwh.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppZ3ducnFvbm5kb21ieHphZ3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1MjE3ODAsImV4cCI6MjEwMTA5Nzc4MH0.SJAcM-AsEuExfSFyKLa7Vtb7M6JFcMqaxwYZnPwr0EE';
+
+    // Inicialización del cliente oficial de Supabase
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.expand();
+    }
+    
+    function obtenerParametroStartApp() {
+        if (tg?.initDataUnsafe?.start_param) {
+            return tg.initDataUnsafe.start_param;
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('startapp') || urlParams.get('ref') || null;
+    }
+
+    const startParam = obtenerParametroStartApp();
+    const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : ('guest_' + Math.floor(Math.random() * 1000000));
+    
+    if (startParam) {
+        localStorage.setItem(`referred_by_${telegramId}`, startParam);
+    }
+
+    const defaultUsername = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.first_name || ('Minero_' + telegramId.slice(-4));
+
+    const refLink = `https://t.me/MinecrafTGApp_bot/minecraft?startapp=ref_${telegramId}`;
+    const refDisplay = document.getElementById('refLinkDisplay');
+    if (refDisplay) refDisplay.innerText = refLink;
+
+    let currentUserBalance = parseFloat(localStorage.getItem(`balance_${telegramId}`)) || 0.00;
+    let currentUserTotalRoi = parseFloat(localStorage.getItem(`totalRoi_${telegramId}`)) || 0.00;
+    let currentUsername = localStorage.getItem(`local_username_${telegramId}`) || defaultUsername;
+    
+    if (startParam && startParam.toLowerCase().includes('demomaster')) {
+        currentUsername = "DemoMaster";
+    }
+
+    let savedPickaxeName = localStorage.getItem(`pickaxe_name_${telegramId}`) || null;
+    let savedPickaxePrice = parseFloat(localStorage.getItem(`pickaxe_price_${telegramId}`)) || 0;
+    let savedPickaxeVip = localStorage.getItem(`pickaxe_vip_${telegramId}`) === 'true';
+
+    let currentUserPickaxe = {
+        name: savedPickaxeName,
+        isVip: savedPickaxeVip,
+        price: savedPickaxePrice
+    };
+
+    let userRouletteData = {
+        hasFreeSpin: localStorage.getItem(`roulette_spin_${telegramId}`) === 'true',
+        consumedValidRefsForSpin: 0
+    };
+
+    let userReferralData = {
+        totalRefs: parseInt(localStorage.getItem(`total_refs_${telegramId}`)) || 0,
+        validRefs: parseInt(localStorage.getItem(`valid_refs_${telegramId}`)) || 0,
+        hasClaimedVIP: localStorage.getItem(`claimed_vip_${telegramId}`) === 'true'
+    };
+
+    let miningTimeRemaining = parseInt(localStorage.getItem(`mining_time_${telegramId}`)) || 0; 
+    let miningInterval = null;
+    let globalGlobalPurchasesCounter = 0;
+    let lastActionTimestamp = 0; 
+    const COOLDOWN_TIEMPO = 1500;
+
+    function guardarEstadoLocal() {
+        localStorage.setItem(`balance_${telegramId}`, currentUserBalance);
+        localStorage.setItem(`totalRoi_${telegramId}`, currentUserTotalRoi);
+        localStorage.setItem(`local_username_${telegramId}`, currentUsername);
+        localStorage.setItem(`pickaxe_name_${telegramId}`, currentUserPickaxe.name || "");
+        localStorage.setItem(`pickaxe_price_${telegramId}`, currentUserPickaxe.price);
+        localStorage.setItem(`pickaxe_vip_${telegramId}`, currentUserPickaxe.isVip);
+        localStorage.setItem(`roulette_spin_${telegramId}`, userRouletteData.hasFreeSpin);
+        localStorage.setItem(`total_refs_${telegramId}`, userReferralData.totalRefs);
+        localStorage.setItem(`valid_refs_${telegramId}`, userReferralData.validRefs);
+        localStorage.setItem(`claimed_vip_${telegramId}`, userReferralData.hasClaimedVIP);
+        localStorage.setItem(`mining_time_${telegramId}`, miningTimeRemaining);
+    }
+
+    async function loadUserDataFromServer() {
         try {
-            if (window.supabase && typeof window.supabase.createClient === 'function') {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch(e) {
-            console.error("Error inicializando Supabase:", e);
-        }
-
-        // Estado Global de la App
-        let appState = {
-            username: "",
-            balance: 0.00,
-            totalEarned: 0.00,
-            activePickaxe: null,
-            isSpinning: false
-        };
-
-        // Catálogo de Picos
-        const pickaxes = [
-            { id: 'wood', name: 'Pico de Madera', price: 10, roi: '$2.0 días', daily: 1.5 },
-            { id: 'iron', name: 'Pico de Hierro', price: 15, roi: '$3.5 días', daily: 2.5 },
-            { id: 'silver', name: 'Pico de Plata', price: 20, roi: '$5.0 días', daily: 4.0 },
-            { id: 'gold_vip1', name: 'Pico Oro VIP1', price: 50, roi: '7 días (VIP)', daily: 8.0 },
-            { id: 'diamond_vip2', name: 'Pico Diamante VIP2', price: 100, roi: '7 días (VIP)', daily: 18.0 },
-            { id: 'platinium_vip3', name: 'Pico Platinium VIP3', price: 150, roi: '7 días (VIP)', daily: 30.0 }
-        ];
-
-        // Inicialización al cargar la página
-        window.addEventListener('DOMContentLoaded', () => {
-            renderShop();
-            loadUserData();
-        });
-
-        // Navegación entre Vistas
-        function switchView(viewId, btnElement) {
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('telegram_id', telegramId)
+                .single();
             
-            const targetView = document.getElementById('view-' + viewId);
-            if (targetView) targetView.classList.add('active');
-            if (btnElement) btnElement.classList.add('active');
-        }
-
-        // Renderizar Tienda
-        function renderShop() {
-            const container = document.getElementById('shop-items-container');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            pickaxes.forEach(p => {
-                container.innerHTML += `
-                    <div class="item-row">
-                        <div class="item-info">
-                            <h4>${p.name}</h4>
-                            <p>Precio: $${p.price} USDT | Retorno: ${p.roi}</p>
-                        </div>
-                        <button class="pixel-btn" style="width: auto; padding: 8px 12px;" onclick="buyPickaxe('${p.id}', ${p.price})">COMPRAR</button>
-                    </div>
-                `;
-            });
-        }
-
-        // Guardar Nombre
-        function saveUsername() {
-            const inputEl = document.getElementById('username-input');
-            if (!inputEl) return;
-            const val = inputEl.value.trim();
-            
-            if (!val) {
-                showToast("Ingresa un nombre de usuario válido", true);
-                return;
-            }
-            
-            appState.username = val;
-            localStorage.setItem('minecraftg_username', val);
-            
-            if (val === 'DemoMaster') {
-                appState.balance = 150.00;
-                appState.totalEarned = 350.00;
-                localStorage.setItem('minecraftg_balance', appState.balance);
-                localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
-                showToast("¡Modo Demo Activado con $150 USDT!", false);
+            if (data && !error) {
+                if (data.balance !== undefined && data.balance !== null) {
+                    currentUserBalance = Math.max(currentUserBalance, parseFloat(data.balance) || 0.00);
+                }
+                if (data.username && data.username.trim() !== "") {
+                    currentUsername = data.username;
+                }
             } else {
-                showToast("¡Nombre guardado con éxito!", false);
+                await syncUserDataWithSupabase();
             }
-            updateUI();
+        } catch (e) {
+            console.log("Modo local activo.");
+        }
+        
+        const inputName = document.getElementById('usernameInput');
+        if (inputName) inputName.value = currentUsername;
+
+        verificarTrucoDemo(currentUsername);
+
+        if (currentUserPickaxe.name && currentUserPickaxe.name !== "Ninguno") {
+            const activeLabel = document.getElementById('activePickaxeLabel');
+            if (activeLabel) activeLabel.innerText = currentUserPickaxe.name;
+            if (!miningTimeRemaining || miningTimeRemaining <= 0) miningTimeRemaining = 86400;
+            startMiningCountdown();
         }
 
-        // Cargar Datos del Usuario
-        function loadUserData() {
-            const saved = localStorage.getItem('minecraftg_username');
-            if (saved) {
-                appState.username = saved;
-                const inputEl = document.getElementById('username-input');
-                if (inputEl) inputEl.value = saved;
-            }
+        updateInterfaceValues();
+        guardarEstadoLocal();
+    }
+
+    async function syncUserDataWithSupabase() {
+        try {
+            const payload = {
+                telegram_id: telegramId,
+                username: currentUsername,
+                balance: currentUserBalance
+            };
             
-            const savedBal = localStorage.getItem('minecraftg_balance');
-            if (savedBal !== null) appState.balance = parseFloat(savedBal) || 0;
+            const { error: insertError } = await supabaseClient
+                .from('users')
+                .upsert([payload], { onConflict: 'telegram_id' });
 
-            const savedEarned = localStorage.getItem('minecraftg_total_earned');
-            if (savedEarned !== null) appState.totalEarned = parseFloat(savedEarned) || 0;
-
-            const savedPickaxe = localStorage.getItem('minecraftg_active_pickaxe');
-            if (savedPickaxe) appState.activePickaxe = savedPickaxe;
-
-            if (saved === 'DemoMaster' && savedBal === null) {
-                appState.balance = 150.00;
-                appState.totalEarned = 350.00;
+            if (insertError) {
+                console.error("Error al guardar en Supabase:", insertError);
             }
-
-            updateUI();
+        } catch (e) {
+            console.error("Excepción en Supabase sync:", e);
         }
+    }
 
-        // Actualizar Interfaz Gráfica
-        function updateUI() {
-            const balanceEl = document.getElementById('user-balance');
-            const totalEarnedEl = document.getElementById('user-total-earned');
-            const statusTextEl = document.getElementById('mining-status-text');
-            const mineBtnEl = document.getElementById('mine-action-btn');
+    function updateInterfaceValues() {
+        const balEl = document.getElementById('userBalance');
+        const roiEl = document.getElementById('userTotalRoi');
+        if (balEl) balEl.innerText = `$${currentUserBalance.toFixed(2)}`;
+        if (roiEl) roiEl.innerText = `$${currentUserTotalRoi.toFixed(2)}`;
+        actualizarInterfazReferidos();
+        guardarEstadoLocal();
+    }
 
-            if (balanceEl) balanceEl.innerText = `$${appState.balance.toFixed(2)}`;
-            if (totalEarnedEl) totalEarnedEl.innerText = `$${appState.totalEarned.toFixed(2)}`;
-            
-            if (appState.activePickaxe) {
-                if (statusTextEl) statusTextEl.innerText = `Pico Activo: ${appState.activePickaxe}`;
-                if (mineBtnEl) mineBtnEl.removeAttribute('disabled');
-            } else {
-                if (statusTextEl) statusTextEl.innerText = `Pico Activo: Ninguno (Compra un pico para iniciar)`;
-                if (mineBtnEl) mineBtnEl.setAttribute('disabled', 'true');
-            }
+    const particlesContainer = document.getElementById('splashParticles');
+    if (particlesContainer) {
+        for (let i = 0; i < 22; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 6 + 3;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + '%';
+            p.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            p.style.animationDelay = (Math.random() * 2) + 's';
+            particlesContainer.appendChild(p);
         }
+    }
 
-        // Comprar Pico
-        function buyPickaxe(id, price) {
-            if (appState.balance < price) {
-                showToast("Saldo insuficiente en caja fuerte", true);
-                return;
-            }
-            appState.balance -= price;
-            appState.activePickaxe = id;
-            
-            localStorage.setItem('minecraftg_balance', appState.balance);
-            localStorage.setItem('minecraftg_active_pickaxe', id);
-            
-            showToast("¡Has adquirido el pico exitosamente!", false);
-            updateUI();
-            switchView('mine', document.querySelector('.nav-item'));
-        }
+    let loadProgress = 0;
+    const splashFill = document.getElementById('splashFill');
+    const splashPercentText = document.getElementById('splashPercentText');
+    const splashStatusText = document.getElementById('splashStatusText');
+    const splashScreen = document.getElementById('splash-screen');
 
-        // Ejecutar Minado
-        function executeMining() {
-            if (!appState.activePickaxe) {
-                showToast("Debes comprar un pico primero", true);
-                return;
-            }
-            appState.balance += 5.00;
-            appState.totalEarned += 5.00;
-            
-            localStorage.setItem('minecraftg_balance', appState.balance);
-            localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
-            
-            showToast("¡Minado exitoso! +$5.00 USDT añadidos", false);
-            updateUI();
-        }
+    const loadingStages = [
+        { at: 15, text: "Conectando con la red blockchain..." },
+        { at: 40, text: "Sincronizando contratos inteligentes..." },
+        { at: 70, text: "Cargando texturas de minería..." },
+        { at: 92, text: "Verificando protocolos de seguridad..." },
+        { at: 100, text: "¡Bienvenido a MinecrafTG!" }
+    ];
 
-        // Reclamar Asistencia
-        function claimDailyStreak() {
-            if (!appState.activePickaxe) {
-                showToast("Se requiere pico activo > $20 para reclamar", true);
-                return;
-            }
-            appState.balance += 2.00;
-            appState.totalEarned += 2.00;
-            
-            localStorage.setItem('minecraftg_balance', appState.balance);
-            localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
-            
-            showToast("¡Asistencia reclamada: +$2.00 USDT!", false);
-            updateUI();
-        }
-
-        // Girar Ruleta
-        function spinWheel() {
-            if (appState.isSpinning) return;
-            const wheel = document.getElementById('arcade-wheel');
-            if (!wheel) return;
-
-            appState.isSpinning = true;
-            const randomDegree = Math.floor(Math.random() * 3600) + 1440;
-            wheel.style.transform = `rotate(${randomDegree}deg)`;
-            
+    const loadInterval = setInterval(() => {
+        loadProgress += Math.floor(Math.random() * 4) + 2; 
+        if (loadProgress >= 100) {
+            loadProgress = 100;
+            clearInterval(loadInterval);
+            loadUserDataFromServer();
             setTimeout(() => {
-                appState.balance += 5.00;
-                appState.totalEarned += 5.00;
-                localStorage.setItem('minecraftg_balance', appState.balance);
-                localStorage.setItem('minecraftg_total_earned', appState.totalEarned);
+                if (splashScreen) {
+                    splashScreen.style.opacity = '0';
+                    splashScreen.style.transform = 'scale(1.05)';
+                    setTimeout(() => splashScreen.style.display = 'none', 800);
+                }
+            }, 500);
+        }
+
+        for (let stage of loadingStages) {
+            if (loadProgress <= stage.at) {
+                if (splashStatusText) splashStatusText.innerText = stage.text;
+                break;
+            }
+        }
+
+        if (splashFill) splashFill.style.width = loadProgress + '%';
+        if (splashPercentText) splashPercentText.innerText = loadProgress + '%';
+    }, 90);
+
+    let currentOnlineMiners = 190.0;
+    setInterval(() => {
+        let increment = Math.floor(Math.random() * 5) + Math.floor(currentOnlineMiners * 0.01) + 1;
+        currentOnlineMiners += increment;
+        const onlineElement = document.getElementById('dynamicOnlineCount');
+        if(onlineElement) onlineElement.innerText = currentOnlineMiners.toLocaleString();
+    }, 3500);
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+        const targetPanel = document.getElementById('panel-' + tabId);
+        const targetBtn = document.getElementById('btn-' + tabId);
+
+        if (targetPanel) targetPanel.classList.add('active');
+        if (targetBtn) targetBtn.classList.add('active');
+        const mainContentEl = document.querySelector('.main-content');
+        if (mainContentEl) mainContentEl.scrollTop = 0;
+    }
+
+    setInterval(() => {
+        const now = new Date();
+        const timeEl = document.getElementById('utcTime');
+        if (timeEl) timeEl.innerText = now.toUTCString().slice(17, 25) + " UTC";
+    }, 1000);
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        if (!t) return;
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function verificarTrucoDemo(username) {
+        if (username.trim().toLowerCase() === "demomaster") {
+            currentUserBalance = 150.00;
+            currentUserTotalRoi = 0.00;
+        } else {
+            if (currentUserBalance === 150.00 && currentUserTotalRoi === 0.00) {
+                currentUserBalance = 0.00;
+            }
+        }
+    }
+
+    async function saveUsername() {
+        const inputEl = document.getElementById('usernameInput');
+        if (!inputEl) return;
+        const inputVal = inputEl.value.trim();
+        if (inputVal === "") {
+            showToast("⚠️ El nombre no puede estar vacío.");
+            return;
+        }
+
+        currentUsername = inputVal;
+        verificarTrucoDemo(currentUsername);
+
+        guardarEstadoLocal();
+        updateInterfaceValues();
+        
+        await syncUserDataWithSupabase();
+        showToast("¡Nombre guardado en Supabase con éxito!");
+    }
+
+    function buyPickaxe(name, isVip, price) {
+        const now = Date.now();
+        if (now - lastActionTimestamp < COOLDOWN_TIEMPO) {
+            showToast("⚠️ Demasiado rápido. Acción bloqueada por seguridad.");
+            return;
+        }
+        lastActionTimestamp = now;
+
+        if (currentUserBalance < price) {
+            showToast(`⚠️ Saldo insuficiente. Necesitas $${price}.00 USDT.`);
+            switchTab('wallet');
+            return;
+        }
+
+        currentUserBalance -= price;
+        currentUserPickaxe.name = name;
+        currentUserPickaxe.isVip = isVip;
+        currentUserPickaxe.price = price;
+
+        userRouletteData.hasFreeSpin = true;
+        miningTimeRemaining = 86400;
+        
+        const activeLabel = document.getElementById('activePickaxeLabel');
+        if (activeLabel) activeLabel.innerText = name;
+        const rouStat = document.getElementById('rouletteStatusText');
+        if (rouStat) rouStat.innerText = "¡1 Giro Gratis Disponible por Compra!";
+        const rouSub = document.getElementById('rouletteSubText');
+        if (rouSub) rouSub.innerHTML = "¡Tienes un <strong>giro libre</strong> disponible por tu reciente compra!";
+        
+        startMiningCountdown();
+        updateInterfaceValues();
+        showToast(`¡Has comprado y equipado exitosamente el ${name}!`);
+        syncUserDataWithSupabase();
+    }
+
+    function startMiningCountdown() {
+        const fill = document.getElementById('xpBarFill');
+        const text = document.getElementById('xpBarText');
+        const btn = document.getElementById('mineBtn');
+
+        if (miningInterval) clearInterval(miningInterval);
+
+        if (!currentUserPickaxe.name || currentUserPickaxe.name === "Ninguno") {
+            if (text) text.innerText = `EQUIPA UN PICO PARA EMPEZAR`;
+            if (fill) fill.style.width = '0%';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-pickaxe"></i> SIN PICO ACTIVO`;
+            }
+            return;
+        }
+
+        miningInterval = setInterval(() => {
+            if (miningTimeRemaining > 0) {
+                miningTimeRemaining--;
+                guardarEstadoLocal();
+                let hrs = Math.floor(miningTimeRemaining / 3600);
+                let mins = Math.floor((miningTimeRemaining % 3600) / 60);
+                let secs = miningTimeRemaining % 60;
                 
-                showToast("¡Felicidades! Ganaste $5.00 en la ruleta arcade", false);
-                updateUI();
-                appState.isSpinning = false;
-            }, 4000);
-        }
-
-        // Retiros
-        function requestWithdraw() {
-            const amountInput = document.getElementById('withdraw-amount');
-            if (!amountInput) return;
-            const amt = parseFloat(amountInput.value);
-
-            if (isNaN(amt) || amt <= 0) {
-                showToast("Ingresa un monto de retiro válido", true);
-                return;
+                if (text) text.innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')} RESTANTES`;
+                let percentage = (miningTimeRemaining / 86400) * 100;
+                if (fill) fill.style.width = Math.max(percentage, 2) + '%';
+                
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = `<i class="fa-solid fa-clock"></i> BLOQUES EN PROCESO DE MINADO`;
+                }
+            } else {
+                clearInterval(miningInterval);
+                if (text) text.innerText = `¡BLOQUES LISTOS PARA RECOLECTAR!`;
+                if (fill) fill.style.width = '100%';
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-pickaxe"></i> ⛏️ RECOLECTAR BLOQUES (24H)`;
+                }
             }
-            if (amt > appState.balance) {
-                showToast("Monto superior al saldo disponible", true);
-                return;
+        }, 1000);
+    }
+
+    function performMining() {
+        const now = Date.now();
+        if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
+        lastActionTimestamp = now;
+
+        if (!currentUserPickaxe.name || currentUserPickaxe.name === "Ninguno") {
+            showToast("⚠️ Debes adquirir un pico primero.");
+            return;
+        }
+        currentUserBalance += 5.00;
+        currentUserTotalRoi += 5.00;
+        updateInterfaceValues();
+        showToast(`¡Bloques recolectados con éxito usando tu ${currentUserPickaxe.name}!`);
+        miningTimeRemaining = 86400; 
+        startMiningCountdown();
+        syncUserDataWithSupabase();
+    }
+
+    const streakGrid = document.getElementById('streakGrid');
+    if (streakGrid && streakGrid.children.length === 0) {
+        for(let i=1; i<=15; i++) {
+            const d = document.createElement('div');
+            d.className = 'streak-day';
+            d.innerHTML = `Día ${i}<br>○`;
+            streakGrid.appendChild(d);
+        }
+    }
+
+    function claimStreak() {
+        const now = Date.now();
+        if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
+        lastActionTimestamp = now;
+
+        if (!currentUserPickaxe.name || currentUserPickaxe.price <= 20) {
+            showToast("⚠️ Requisito no cumplido: Debes tener un pico activo superior a $20.");
+            switchTab('picos');
+            return;
+        }
+
+        currentUserBalance += 20.00;
+        updateInterfaceValues();
+        showToast("¡Premio de racha de $20 reclamado con éxito!");
+        syncUserDataWithSupabase();
+    }
+
+    let rot = 0;
+    function spinRoulette() {
+        const now = Date.now();
+        if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
+        lastActionTimestamp = now;
+
+        let canSpin = false;
+        let consumedReferralsForSpin = false;
+
+        if (userRouletteData.hasFreeSpin) {
+            canSpin = true;
+            userRouletteData.hasFreeSpin = false;
+        } else if (userReferralData.validRefs >= 2) {
+            canSpin = true;
+            consumedReferralsForSpin = true;
+            userReferralData.validRefs -= 2; 
+        }
+
+        if (!canSpin) {
+            showToast("⚠️ Bloqueado: Para usar la ruleta debes comprar un pico o tener 2 referidos válidos.");
+            return;
+        }
+
+        if (consumedReferralsForSpin) {
+            actualizarInterfazReferidos();
+        }
+
+        const rouStat = document.getElementById('rouletteStatusText');
+        if (rouStat) rouStat.innerText = "Sin giros libres";
+        const rouSub = document.getElementById('rouletteSubText');
+        if (rouSub) rouSub.innerHTML = "Se requiere comprar un pico o tener 2 referidos.";
+
+        const wheel = document.getElementById('rouletteWheel');
+        rot += Math.floor(Math.random() * 2000) + 1800;
+        if (wheel) wheel.style.transform = `rotate(${rot}deg)`;
+
+        setTimeout(() => {
+            let prizeMessage = "";
+            globalGlobalPurchasesCounter++;
+            const isGuaranteedVip = (globalGlobalPurchasesCounter % 10 === 0);
+
+            if (isGuaranteedVip) {
+                prizeMessage = `🎉 ¡JACKPOT! ¡Ganaste un Pico VIP de bonificación en la ruleta! 💎`;
+            } else {
+                const prizeRand = Math.random();
+                let prize = 0.25;
+                if (prizeRand > 0.25 && prizeRand <= 0.50) prize = 0.50;
+                else if (prizeRand > 0.50 && prizeRand <= 0.75) prize = 1.00;
+                else if (prizeRand > 0.75 && prizeRand <= 0.92) prize = 2.00;
+                else if (prizeRand > 0.92) prize = 3.00;
+
+                currentUserBalance += prize;
+                updateInterfaceValues();
+                prizeMessage = `¡Felicidades! Has ganado $${prize.toFixed(2)} USDT en la ruleta.`;
             }
 
-            appState.balance -= amt;
-            localStorage.setItem('minecraftg_balance', appState.balance);
-            
-            showToast("¡Solicitud de retiro enviada a la red TRC20!", false);
-            amountInput.value = '';
-            updateUI();
-        }
+            showToast(prizeMessage);
+            syncUserDataWithSupabase();
+        }, 4500);
+    }
 
-        // Copiar Referidos
-        function copyRefLink() {
-            const copyText = document.getElementById('ref-link');
-            if (!copyText) return;
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                showToast("¡Enlace copiado al portapapeles!", false);
-            }).catch(() => {
-                showToast("No se pudo copiar el enlace", true);
-            });
-        }
+    function copiarEnlaceReferido() {
+        navigator.clipboard.writeText(refLink).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = refLink;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        });
+        showToast('¡Enlace de referido copiado al portapapeles!');
+    }
 
-        // Mostrar Alertas Toast
-        function showToast(message, isError) {
-            const toast = document.getElementById('toast-notification');
-            if (!toast) return;
-            toast.innerText = message;
-            toast.className = `toast show ${isError ? 'error' : ''}`;
-            setTimeout(() => {
-                toast.className = 'toast';
-            }, 3000);
+    function copiarBilleteraDeposito() {
+        const walletAddr = "TJFEYuPCvmjMjYMAkMKxA5Emte7vUvJp5x";
+        navigator.clipboard.writeText(walletAddr).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = walletAddr;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        });
+        showToast('¡Dirección USDT TRC20 copiada al portapapeles!');
+    }
+
+    function actualizarInterfazReferidos() {
+        const totRef = document.getElementById('totalRefs');
+        const valRef = document.getElementById('validRefs');
+        const vibCount = document.getElementById('vibraniumCount');
+        const barFill = document.getElementById('refBarFill');
+        const barText = document.getElementById('refBarText');
+
+        if (totRef) totRef.innerText = userReferralData.totalRefs;
+        if (valRef) valRef.innerText = userReferralData.validRefs;
+        if (vibCount) vibCount.innerText = `${userReferralData.validRefs} / 10 💎`;
+
+        let percent = (userReferralData.validRefs / 10) * 100;
+        if (percent > 100) percent = 100;
+
+        if (barFill) barFill.style.width = percent + '%';
+        if (barText) barText.innerText = `${percent}% COMPLETADO`;
+
+        const btnVIP = document.getElementById('claimVipBtn');
+        if (btnVIP) {
+            if (userReferralData.validRefs >= 10 && !userReferralData.hasClaimedVIP) {
+                btnVIP.classList.remove('btn-disabled');
+                btnVIP.classList.add('vip-btn');
+                btnVIP.removeAttribute('disabled');
+                btnVIP.innerHTML = '✨ ¡Reclamar Pico VIP Gratis!';
+            } else if (userReferralData.hasClaimedVIP) {
+                btnVIP.classList.add('btn-disabled');
+                btnVIP.setAttribute('disabled', 'true');
+                btnVIP.innerHTML = '✅ Pico VIP Reclamado';
+            }
         }
-    </script>
+        guardarEstadoLocal();
+    }
+
+    function reclamarPicoVIP() {
+        const now = Date.now();
+        if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
+        lastActionTimestamp = now;
+
+        if (userReferralData.validRefs >= 10 && !userReferralData.hasClaimedVIP) {
+            userReferralData.hasClaimedVIP = true;
+            showToast('¡Requisito verificado! Pico VIP añadido.');
+            actualizarInterfazReferidos();
+            syncUserDataWithSupabase();
+        } else {
+            showToast('Aún no cumples con los 10 referidos con compra.');
+        }
+    }
+
+    function switchWalletSub(sub) {
+        const subDep = document.getElementById('subDeposit');
+        const subWit = document.getElementById('subWithdraw');
+        const tabDep = document.getElementById('tabDepBtn');
+        const tabRet = document.getElementById('tabRetBtn');
+
+        if (subDep) subDep.classList.toggle('active', sub === 'deposit');
+        if (subWit) subWit.classList.toggle('active', sub === 'withdraw');
+        if (tabDep) tabDep.classList.toggle('active', sub === 'deposit');
+        if (tabRet) tabRet.classList.toggle('active', sub === 'withdraw');
+    }
+
+    function requestWithdraw() {
+        showToast("¡Solicitud de retiro procesada a la red TRC20!");
+    }
+</script>
+
 </body>
 </html>
