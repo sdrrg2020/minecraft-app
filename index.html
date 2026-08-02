@@ -873,39 +873,73 @@
     // Inicialización del cliente oficial de Supabase
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. Asegúrate de que Telegram esté listo antes de leer nada
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
+    // ================== IDENTIDAD Y REFERIDOS (CORREGIDO) ==================
+    const TG = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+    if (TG) { TG.ready(); TG.expand(); }
 
-    // 2. Extraer los datos DIRECTAMENTE del objeto seguro de Telegram (No de window.location)
-    const tgData = window.Telegram.WebApp.initDataUnsafe;
+    const tgData = TG ? (TG.initDataUnsafe || {}) : {};
+    const realTelegramId = tgData?.user?.id;
 
-    // 3. Obtener tu ID real de Telegram de forma segura
-    const realTelegramId = tgData?.user?.id; 
-
-    // 4. Obtener el parámetro de referido limpio ("ref_8908635949")
-    let startParam = tgData?.start_param; 
-    if (!startParam) {
-        const urlParams = new URLSearchParams(window.location.search);
-        startParam = urlParams.get('startapp') || urlParams.get('ref') || null;
+    // Lee el parámetro de referido desde TODAS las fuentes posibles.
+    function leerStartParam() {
+        let p = tgData?.start_param || null;
+        if (!p) {
+            const qs = new URLSearchParams(window.location.search);
+            p = qs.get('tgWebAppStartParam') || qs.get('startapp') || qs.get('start') || qs.get('ref') || null;
+        }
+        if (!p && window.location.hash) {
+            const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+            p = h.get('tgWebAppStartParam') || null;
+        }
+        return p;
     }
 
-    // Identificador persistente seguro para invitados y usuarios de Telegram
-    let telegramId = realTelegramId ? String(realTelegramId) : localStorage.getItem('guest_telegram_id');
-    if (!telegramId) {
-        telegramId = 'guest_' + Math.floor(Math.random() * 1000000);
-        localStorage.setItem('guest_telegram_id', telegramId);
+    const startParam = leerStartParam();
+
+    // CLAVE GLOBAL (no atada al id): así el referido NO se pierde si el visitante
+    // entra primero sin identidad y después abre la app correctamente.
+    if (startParam && startParam.toLowerCase().startsWith('ref_')) {
+        localStorage.setItem('pending_ref', startParam);
     }
-    
-    if (startParam) {
-        localStorage.setItem(`referred_by_${telegramId}`, startParam);
+    const pendingRef = localStorage.getItem('pending_ref');
+
+    // SIN id real de Telegram NO se crea ninguna cuenta. Se acabaron los usuarios temporales.
+    let telegramId = realTelegramId ? String(realTelegramId) : null;
+
+    // En algunos telefonos Telegram tarda un instante en entregar la identidad.
+    // Reintentamos durante 2 segundos ANTES de decidir que no hay usuario.
+    async function esperarIdentidadTelegram() {
+        if (telegramId) return true;
+        for (let i = 0; i < 10; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+            if (id) { telegramId = String(id); return true; }
+        }
+        return false;
     }
 
-    const defaultUsername = tgData?.user?.username || tgData?.user?.first_name || ('Minero_' + telegramId.slice(-4));
+    function bloquearFueraDeTelegram() {
+        const sp = document.getElementById('splash-screen');
+        if (!sp) return;
+        sp.style.display = 'flex';
+        sp.style.opacity = '1';
+        sp.innerHTML = '<div style="text-align:center;padding:30px;max-width:340px;">'
+            + '<div style="font-size:44px;margin-bottom:18px;">&#128274;</div>'
+            + '<div style="font-family:\'Press Start 2P\',monospace;font-size:13px;color:#f4c430;margin-bottom:14px;line-height:1.8;">ABRE DESDE TELEGRAM</div>'
+            + '<div style="font-size:13px;color:#cbd5e0;line-height:1.7;">No pudimos verificar tu cuenta de Telegram, por eso no se creó ningún registro.<br><br>Abre la app con el botón del bot para que tu registro y tu referido queden guardados correctamente.</div>'
+            + '<a href="https://t.me/MinecrafTGApp_bot" style="display:inline-block;margin-top:22px;background:#4d7c0f;color:#fff;padding:14px 22px;border-radius:10px;text-decoration:none;font-weight:700;">Abrir @MinecrafTGApp_bot</a>'
+            + '</div>';
+    }
 
-    const refLink = `https://t.me/MinecrafTGApp_bot/minecraft?startapp=ref_${telegramId}`;
+    const defaultUsername = tgData?.user?.username || tgData?.user?.first_name
+        || ('Minero_' + (telegramId ? telegramId.slice(-4) : '0000'));
+
+    // Enlace de referido (mini app directa). El referido queda guardado en
+    // 'pending_ref' apenas se abre la página, aunque Telegram todavía no
+    // haya entregado la identidad. Así nunca se pierde.
+    const refLink = telegramId ? `https://t.me/MinecrafTGApp_bot/minecraft?startapp=ref_${telegramId}` : '';
     const refDisplay = document.getElementById('refLinkDisplay');
-    if (refDisplay) refDisplay.innerText = refLink;
+    if (refDisplay) refDisplay.innerText = refLink || 'Abre la app desde Telegram para ver tu enlace';
 
     let currentUserBalance = parseFloat(localStorage.getItem(`balance_${telegramId}`)) || 0.00;
     let currentUserTotalRoi = parseFloat(localStorage.getItem(`totalRoi_${telegramId}`)) || 0.00;
@@ -954,39 +988,56 @@
         localStorage.setItem(`claimed_vip_${telegramId}`, userReferralData.hasClaimedVIP);
     }
 
-    // Configuración de Supabase Realtime (Ajustes de saldo en línea en tiempo real)
-    function subscribeToRealtimeChanges() {
-        supabaseClient
-            .channel('public:users:' + telegramId)
-            .on('postgres_changes', { 
-                event: 'UPDATE', 
-                schema: 'public', 
-                table: 'users',
-                filter: `telegram_id=eq.${telegramId}`
-            }, payload => {
-                if (payload.new) {
-                    if (payload.new.balance !== undefined && payload.new.balance !== null) {
-                        currentUserBalance = parseFloat(payload.new.balance) || 0.00;
-                    }
-                    if (payload.new.total_roi !== undefined && payload.new.total_roi !== null) {
-                        currentUserTotalRoi = parseFloat(payload.new.total_roi) || 0.00;
-                    }
-                    if (payload.new.username) {
-                        currentUsername = payload.new.username;
-                    }
-                    if (payload.new.pickaxe_name) {
-                        currentUserPickaxe.name = payload.new.pickaxe_name;
-                        const activeLabel = document.getElementById('activePickaxeLabel');
-                        if (activeLabel) activeLabel.innerText = currentUserPickaxe.name;
-                    }
-                    updateInterfaceValues();
-                    showToast("⚡ ¡Datos actualizados desde el servidor!");
-                }
-            })
-            .subscribe();
+    // Vincula al usuario nuevo con quien lo invitó (server-side, vía RPC)
+    async function registrarReferidoEnServidor() {
+        if (!telegramId || !pendingRef) return;
+        if (!pendingRef.toLowerCase().startsWith('ref_')) return;
+        const referrerId = pendingRef.slice(4).trim();
+        if (!referrerId || referrerId === telegramId) return;
+        try {
+            const { error } = await supabaseClient.rpc('registrar_referido', {
+                p_user: String(telegramId),
+                p_referrer: String(referrerId)
+            });
+            if (error) console.error('registrar_referido:', error.message);
+        } catch (err) {
+            console.error('Error registrando referido:', err);
+        }
+    }
+
+    // Recalcula MIS contadores contando filas reales (inmune a condiciones de carrera)
+    async function recontarMisReferidos() {
+        if (!telegramId) return;
+        try {
+            await supabaseClient.rpc('recontar_referidos', { p_referrer: String(telegramId) });
+        } catch (err) { console.error('recontar_referidos:', err); }
+    }
+
+    // Avisa al servidor que YO ya compré pico, para que mi referidor sume un válido
+    async function actualizarAMiReferidor() {
+        if (!telegramId) return;
+        try {
+            await supabaseClient.rpc('notificar_a_mi_referidor', { p_user: String(telegramId) });
+        } catch (err) { console.error('notificar_a_mi_referidor:', err); }
     }
 
     async function loadUserDataFromServer() {
+        const hayIdentidad = await esperarIdentidadTelegram();
+        if (!hayIdentidad) { bloquearFueraDeTelegram(); return; }
+
+        // Ya tenemos el id real: refrescamos todo lo que depende de el
+        const refDisplay2 = document.getElementById('refLinkDisplay');
+        if (refDisplay2) {
+            refDisplay2.innerText = `https://t.me/MinecrafTGApp_bot/minecraft?startapp=ref_${telegramId}`;
+        }
+
+        const nombrePorDefecto = window.Telegram?.WebApp?.initDataUnsafe?.user?.username
+            || window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name
+            || ('Minero_' + telegramId.slice(-4));
+        currentUserBalance  = parseFloat(localStorage.getItem(`balance_${telegramId}`)) || currentUserBalance || 0.00;
+        currentUserTotalRoi = parseFloat(localStorage.getItem(`totalRoi_${telegramId}`)) || currentUserTotalRoi || 0.00;
+        currentUsername     = localStorage.getItem(`local_username_${telegramId}`) || nombrePorDefecto;
+
         try {
             const { data, error } = await supabaseClient
                 .from('users')
@@ -995,9 +1046,8 @@
                 .maybeSingle();
             
             if (data && !error) {
-                // Sincronizar 우선 el saldo desde el servidor en línea
                 if (data.balance !== undefined && data.balance !== null) {
-                    currentUserBalance = parseFloat(data.balance) || 0.00;
+                    currentUserBalance = Math.max(currentUserBalance, parseFloat(data.balance) || 0.00);
                 }
                 if (data.total_roi !== undefined && data.total_roi !== null) {
                     currentUserTotalRoi = parseFloat(data.total_roi) || 0.00;
@@ -1024,27 +1074,25 @@
                     userReferralData.validRefs = parseInt(data.valid_refs) || 0;
                 }
             } else {
-                const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
-                if (referredBy && referredBy.startsWith('ref_')) {
-                    const referrerId = referredBy.replace('ref_', '');
-                    if (referrerId !== telegramId) {
-                        try {
-                            const { data: refData } = await supabaseClient
-                                .from('users')
-                                .select('total_refs')
-                                .eq('telegram_id', referrerId)
-                                .maybeSingle();
-                            const currentRefTotal = refData ? (parseInt(refData.total_refs) || 0) + 1 : 1;
-                            await supabaseClient
-                                .from('users')
-                                .update({ total_refs: currentRefTotal })
-                                .eq('telegram_id', referrerId);
-                        } catch (err) {
-                            console.error("Error al actualizar referidos totales:", err);
-                        }
-                    }
-                }
+                // Usuario NUEVO: primero se crea la fila en la base de datos.
                 await syncUserDataWithSupabase();
+            }
+
+            // Vinculacion del referido. Se intenta SIEMPRE: si ya estaba vinculado
+            // o si la persona ya compro un pico, el servidor lo ignora solo.
+            // Asi el referido no se pierde aunque falle la conexion la primera vez.
+            await registrarReferidoEnServidor();
+
+            // Contadores siempre recalculados desde la BD
+            await recontarMisReferidos();
+            const { data: fresh } = await supabaseClient
+                .from('users')
+                .select('total_refs, valid_refs')
+                .eq('telegram_id', telegramId)
+                .maybeSingle();
+            if (fresh) {
+                userReferralData.totalRefs = parseInt(fresh.total_refs) || 0;
+                userReferralData.validRefs = parseInt(fresh.valid_refs) || 0;
             }
         } catch (e) {
             console.log("Modo local activo:", e);
@@ -1063,10 +1111,10 @@
 
         updateInterfaceValues();
         guardarEstadoLocal();
-        subscribeToRealtimeChanges();
     }
 
     async function syncUserDataWithSupabase() {
+        if (!telegramId) return;
         try {
             const payload = {
                 telegram_id: String(telegramId),
@@ -1253,29 +1301,6 @@
         const miningEndTime = Date.now() + (86400 * 1000);
         localStorage.setItem(`mining_end_${telegramId}`, miningEndTime);
 
-        if (wasNoPickaxe) {
-            const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
-            if (referredBy && referredBy.startsWith('ref_')) {
-                const referrerId = referredBy.replace('ref_', '');
-                if (referrerId !== telegramId && !localStorage.getItem(`valid_ref_sent_${telegramId}`)) {
-                    localStorage.setItem(`valid_ref_sent_${telegramId}`, 'true');
-                    try {
-                        const { data: refData } = await supabaseClient
-                            .from('users')
-                            .select('valid_refs')
-                            .eq('telegram_id', referrerId)
-                            .maybeSingle();
-                        const currentValidRefs = refData ? (parseInt(refData.valid_refs) || 0) + 1 : 1;
-                        await supabaseClient
-                            .from('users')
-                            .update({ valid_refs: currentValidRefs })
-                            .eq('telegram_id', referrerId);
-                    } catch (err) {
-                        console.error("Error al actualizar valid_refs del referidor:", err);
-                    }
-                }
-            }
-        }
         
         const activeLabel = document.getElementById('activePickaxeLabel');
         if (activeLabel) activeLabel.innerText = name;
@@ -1288,6 +1313,12 @@
         updateInterfaceValues();
         showToast(`¡Has comprado y equipado exitosamente el ${name}!`);
         await syncUserDataWithSupabase();
+
+        // El referidor suma un referido VÁLIDO solo si esta es la primera compra.
+        // El servidor decide, no el localStorage (antes se podía falsificar).
+        if (wasNoPickaxe) {
+            await actualizarAMiReferidor();
+        }
     }
 
     function startMiningCountdown() {
@@ -1446,9 +1477,13 @@
     }
 
     function copiarEnlaceReferido() {
-        navigator.clipboard.writeText(refLink).catch(() => {
+        const enlace = telegramId
+            ? `https://t.me/MinecrafTGApp_bot/minecraft?startapp=ref_${telegramId}`
+            : refLink;
+        if (!enlace) { showToast('Abre la app desde Telegram para obtener tu enlace.'); return; }
+        navigator.clipboard.writeText(enlace).catch(() => {
             const el = document.createElement('textarea');
-            el.value = refLink;
+            el.value = enlace;
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
