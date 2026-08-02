@@ -890,17 +890,6 @@
         startParam = urlParams.get('startapp') || urlParams.get('ref') || null;
     }
 
-    // 5. Condicionar la petición para que NO use "guest_" si estás en Telegram
-    if (realTelegramId) {
-        // Usa el ID real para tu API
-        const apiUrl = `https://minecraft-app.netlify.app/.netlify/functions/api?telegramId=${realTelegramId}`;
-        
-        // Aquí haces tu fetch() normal que ya tienes en la línea 956...
-        // fetch(apiUrl) ...
-    } else {
-        console.error("No se pudo obtener el ID de Telegram. Estás abriendo fuera de la app.");
-    }    
-
     // Identificador persistente seguro para invitados y usuarios de Telegram
     let telegramId = realTelegramId ? String(realTelegramId) : localStorage.getItem('guest_telegram_id');
     if (!telegramId) {
