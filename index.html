@@ -885,8 +885,16 @@
     const realTelegramId = tgData?.user?.id;
 
     // Lee el parámetro de referido desde TODAS las fuentes posibles.
+    // IMPORTANTE: siempre consulta el objeto VIVO de Telegram, nunca una copia
+    // guardada al cargar la pagina (en algunos telefonos llega unos ms despues).
     function leerStartParam() {
-        let p = tgData?.start_param || null;
+        const live = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        let p = live?.initDataUnsafe?.start_param || null;
+
+        // Fuente mas fiable: la cadena initData firmada.
+        if (!p && live?.initData) {
+            try { p = new URLSearchParams(live.initData).get('start_param') || null; } catch (e) {}
+        }
         if (!p) {
             const qs = new URLSearchParams(window.location.search);
             p = qs.get('tgWebAppStartParam') || qs.get('startapp') || qs.get('start') || qs.get('ref') || null;
@@ -898,14 +906,19 @@
         return p;
     }
 
-    const startParam = leerStartParam();
-
     // CLAVE GLOBAL (no atada al id): así el referido NO se pierde si el visitante
     // entra primero sin identidad y después abre la app correctamente.
-    if (startParam && startParam.toLowerCase().startsWith('ref_')) {
-        localStorage.setItem('pending_ref', startParam);
+    function guardarPendingRef(p) {
+        if (p && String(p).toLowerCase().startsWith('ref_')) {
+            localStorage.setItem('pending_ref', String(p));
+            return true;
+        }
+        return false;
     }
-    const pendingRef = localStorage.getItem('pending_ref');
+
+    let startParam = leerStartParam();
+    guardarPendingRef(startParam);
+    let pendingRef = localStorage.getItem('pending_ref');
 
     // SIN id real de Telegram NO se crea ninguna cuenta. Se acabaron los usuarios temporales.
     let telegramId = realTelegramId ? String(realTelegramId) : null;
@@ -913,10 +926,20 @@
     // En algunos telefonos Telegram tarda un instante en entregar la identidad.
     // Reintentamos durante 2 segundos ANTES de decidir que no hay usuario.
     async function esperarIdentidadTelegram() {
+        // Aunque ya tengamos id, reintentamos leer el start_param por si Telegram
+        // lo entrego despues de que se ejecuto el script.
+        if (!startParam) {
+            const p = leerStartParam();
+            if (p) { startParam = p; guardarPendingRef(p); pendingRef = localStorage.getItem('pending_ref'); }
+        }
         if (telegramId) return true;
         for (let i = 0; i < 10; i++) {
             await new Promise(r => setTimeout(r, 200));
             const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+            if (!startParam) {
+                const p = leerStartParam();
+                if (p) { startParam = p; guardarPendingRef(p); pendingRef = localStorage.getItem('pending_ref'); }
+            }
             if (id) { telegramId = String(id); return true; }
         }
         return false;
@@ -995,6 +1018,12 @@
     // Vincula al usuario nuevo con quien lo invitó (server-side, vía RPC)
     async function registrarReferidoEnServidor() {
         if (!telegramId) return;
+        // Releemos por si el parametro llego tarde.
+        if (!pendingRef) {
+            const p = leerStartParam();
+            if (p) { startParam = p; guardarPendingRef(p); }
+            pendingRef = localStorage.getItem('pending_ref');
+        }
         if (!pendingRef) { pintarDiagnostico('NO llego ningun codigo de referido'); return; }
         if (!pendingRef.toLowerCase().startsWith('ref_')) { pintarDiagnostico('codigo con formato raro: ' + pendingRef); return; }
         const referrerId = pendingRef.slice(4).trim();
