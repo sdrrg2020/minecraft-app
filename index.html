@@ -641,7 +641,7 @@
                         <div class="xp-bar-text" id="xpBarText">EQUIPA UN PICO PARA EMPEZAR</div>
                     </div>
                     <button class="btn-mine" id="mineBtn" onclick="performMining()" disabled>
-                        <i class="fa-solid fa-pickaxe"></i> SIN PICO ACTIVO
+                        <i class="fa-solid fa-hammer"></i> SIN PICO ACTIVO
                     </button>
                 </div>
             </div>
@@ -1258,7 +1258,7 @@
             if (fill) fill.style.width = '0%';
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `<i class="fa-solid fa-pickaxe"></i> SIN PICO ACTIVO`;
+                btn.innerHTML = `<i class="fa-solid fa-hammer"></i> SIN PICO ACTIVO`;
             }
             return;
         }
@@ -1285,7 +1285,7 @@
                 if (fill) fill.style.width = '100%';
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = `<i class="fa-solid fa-pickaxe"></i> ⛏️ RECOLECTAR BLOQUES (24H)`;
+                    btn.innerHTML = `<i class="fa-solid fa-hammer"></i> ⛏️ RECOLECTAR BLOQUES (24H)`;
                 }
             }
         }, 1000);
