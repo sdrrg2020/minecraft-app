@@ -873,24 +873,36 @@
     // Inicialización del cliente oficial de Supabase
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready(); // Inicializa correctamente la app en Telegram
-        tg.expand();
-    }
-    
-    function obtenerParametroStartApp() {
-        if (tg?.initDataUnsafe?.start_param) {
-            return tg.initDataUnsafe.start_param;
-        }
+    // 1. Asegúrate de que Telegram esté listo antes de leer nada
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+
+    // 2. Extraer los datos DIRECTAMENTE del objeto seguro de Telegram (No de window.location)
+    const tgData = window.Telegram.WebApp.initDataUnsafe;
+
+    // 3. Obtener tu ID real de Telegram de forma segura
+    const realTelegramId = tgData?.user?.id; 
+
+    // 4. Obtener el parámetro de referido limpio ("ref_8908635949")
+    let startParam = tgData?.start_param; 
+    if (!startParam) {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('startapp') || urlParams.get('ref') || null;
+        startParam = urlParams.get('startapp') || urlParams.get('ref') || null;
     }
 
-    const startParam = obtenerParametroStartApp();
-    
+    // 5. Condicionar la petición para que NO use "guest_" si estás en Telegram
+    if (realTelegramId) {
+        // Usa el ID real para tu API
+        const apiUrl = `https://minecraft-app.netlify.app/.netlify/functions/api?telegramId=${realTelegramId}`;
+        
+        // Aquí haces tu fetch() normal que ya tienes en la línea 956...
+        // fetch(apiUrl) ...
+    } else {
+        console.error("No se pudo obtener el ID de Telegram. Estás abriendo fuera de la app.");
+    }    
+
     // Identificador persistente seguro para invitados y usuarios de Telegram
-    let telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : localStorage.getItem('guest_telegram_id');
+    let telegramId = realTelegramId ? String(realTelegramId) : localStorage.getItem('guest_telegram_id');
     if (!telegramId) {
         telegramId = 'guest_' + Math.floor(Math.random() * 1000000);
         localStorage.setItem('guest_telegram_id', telegramId);
@@ -900,7 +912,7 @@
         localStorage.setItem(`referred_by_${telegramId}`, startParam);
     }
 
-    const defaultUsername = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.first_name || ('Minero_' + telegramId.slice(-4));
+    const defaultUsername = tgData?.user?.username || tgData?.user?.first_name || ('Minero_' + telegramId.slice(-4));
 
     const refLink = `https://t.me/MinecrafTGApp_bot/minecraft?startapp=ref_${telegramId}`;
     const refDisplay = document.getElementById('refLinkDisplay');
