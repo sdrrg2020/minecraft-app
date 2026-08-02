@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!D<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -952,20 +952,62 @@
                 .from('users')
                 .select('*')
                 .eq('telegram_id', telegramId)
-                .maybeSingle(); // Corregido: maybeSingle evita el error 406 para usuarios nuevos
+                .maybeSingle();
             
             if (data && !error) {
                 if (data.balance !== undefined && data.balance !== null) {
                     currentUserBalance = Math.max(currentUserBalance, parseFloat(data.balance) || 0.00);
                 }
+                if (data.total_roi !== undefined && data.total_roi !== null) {
+                    currentUserTotalRoi = parseFloat(data.total_roi) || 0.00;
+                }
                 if (data.username && data.username.trim() !== "") {
                     currentUsername = data.username;
                 }
+                if (data.pickaxe_name) {
+                    currentUserPickaxe.name = data.pickaxe_name;
+                }
+                if (data.pickaxe_price !== undefined) {
+                    currentUserPickaxe.price = parseFloat(data.pickaxe_price) || 0;
+                }
+                if (data.pickaxe_vip !== undefined) {
+                    currentUserPickaxe.isVip = Boolean(data.pickaxe_vip);
+                }
+                if (data.has_free_spin !== undefined) {
+                    userRouletteData.hasFreeSpin = Boolean(data.has_free_spin);
+                }
+                if (data.total_refs !== undefined) {
+                    userReferralData.totalRefs = parseInt(data.total_refs) || 0;
+                }
+                if (data.valid_refs !== undefined) {
+                    userReferralData.validRefs = parseInt(data.valid_refs) || 0;
+                }
             } else {
+                // Nuevo usuario: Registrar referido si existe
+                const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
+                if (referredBy && referredBy.startsWith('ref_')) {
+                    const referrerId = referredBy.replace('ref_', '');
+                    if (referrerId !== telegramId) {
+                        try {
+                            const { data: refData } = await supabaseClient
+                                .from('users')
+                                .select('total_refs')
+                                .eq('telegram_id', referrerId)
+                                .maybeSingle();
+                            const currentRefTotal = refData ? (parseInt(refData.total_refs) || 0) + 1 : 1;
+                            await supabaseClient
+                                .from('users')
+                                .update({ total_refs: currentRefTotal })
+                                .eq('telegram_id', referrerId);
+                        } catch (err) {
+                            console.error("Error al actualizar referidos totales:", err);
+                        }
+                    }
+                }
                 await syncUserDataWithSupabase();
             }
         } catch (e) {
-            console.log("Modo local activo.");
+            console.log("Modo local activo:", e);
         }
         
         const inputName = document.getElementById('usernameInput');
@@ -989,15 +1031,22 @@
             const payload = {
                 telegram_id: telegramId,
                 username: currentUsername,
-                balance: currentUserBalance
+                balance: currentUserBalance,
+                total_roi: currentUserTotalRoi,
+                pickaxe_name: currentUserPickaxe.name || null,
+                pickaxe_price: currentUserPickaxe.price,
+                pickaxe_vip: currentUserPickaxe.isVip,
+                has_free_spin: userRouletteData.hasFreeSpin,
+                total_refs: userReferralData.totalRefs,
+                valid_refs: userReferralData.validRefs
             };
             
-            const { error: insertError } = await supabaseClient
+            const { error: upsertError } = await supabaseClient
                 .from('users')
                 .upsert([payload], { onConflict: 'telegram_id' });
 
-            if (insertError) {
-                console.error("Error al guardar en Supabase:", insertError);
+            if (upsertError) {
+                console.error("Error al guardar en Supabase:", upsertError);
             }
         } catch (e) {
             console.error("Excepción en Supabase sync:", e);
@@ -1134,7 +1183,7 @@
         showToast("¡Nombre guardado en Supabase con éxito!");
     }
 
-    function buyPickaxe(name, isVip, price) {
+    async function buyPickaxe(name, isVip, price) {
         const now = Date.now();
         if (now - lastActionTimestamp < COOLDOWN_TIEMPO) {
             showToast("⚠️ Demasiado rápido. Acción bloqueada por seguridad.");
@@ -1148,6 +1197,8 @@
             return;
         }
 
+        const wasNoPickaxe = !currentUserPickaxe.name || currentUserPickaxe.name === "Ninguno";
+
         currentUserBalance -= price;
         currentUserPickaxe.name = name;
         currentUserPickaxe.isVip = isVip;
@@ -1155,6 +1206,31 @@
 
         userRouletteData.hasFreeSpin = true;
         miningTimeRemaining = 86400;
+
+        // Si es su primera compra y tiene referido, actualizar referidos válidos en Supabase
+        if (wasNoPickaxe) {
+            const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
+            if (referredBy && referredBy.startsWith('ref_')) {
+                const referrerId = referredBy.replace('ref_', '');
+                if (referrerId !== telegramId && !localStorage.getItem(`valid_ref_sent_${telegramId}`)) {
+                    localStorage.setItem(`valid_ref_sent_${telegramId}`, 'true');
+                    try {
+                        const { data: refData } = await supabaseClient
+                            .from('users')
+                            .select('valid_refs')
+                            .eq('telegram_id', referrerId)
+                            .maybeSingle();
+                        const currentValidRefs = refData ? (parseInt(refData.valid_refs) || 0) + 1 : 1;
+                        await supabaseClient
+                            .from('users')
+                            .update({ valid_refs: currentValidRefs })
+                            .eq('telegram_id', referrerId);
+                    } catch (err) {
+                        console.error("Error al actualizar valid_refs del referidor:", err);
+                    }
+                }
+            }
+        }
         
         const activeLabel = document.getElementById('activePickaxeLabel');
         if (activeLabel) activeLabel.innerText = name;
@@ -1166,7 +1242,7 @@
         startMiningCountdown();
         updateInterfaceValues();
         showToast(`¡Has comprado y equipado exitosamente el ${name}!`);
-        syncUserDataWithSupabase();
+        await syncUserDataWithSupabase();
     }
 
     function startMiningCountdown() {
@@ -1214,7 +1290,7 @@
         }, 1000);
     }
 
-    function performMining() {
+    async function performMining() {
         const now = Date.now();
         if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
         lastActionTimestamp = now;
@@ -1229,7 +1305,7 @@
         showToast(`¡Bloques recolectados con éxito usando tu ${currentUserPickaxe.name}!`);
         miningTimeRemaining = 86400; 
         startMiningCountdown();
-        syncUserDataWithSupabase();
+        await syncUserDataWithSupabase();
     }
 
     const streakGrid = document.getElementById('streakGrid');
@@ -1242,7 +1318,7 @@
         }
     }
 
-    function claimStreak() {
+    async function claimStreak() {
         const now = Date.now();
         if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
         lastActionTimestamp = now;
@@ -1256,11 +1332,11 @@
         currentUserBalance += 20.00;
         updateInterfaceValues();
         showToast("¡Premio de racha de $20 reclamado con éxito!");
-        syncUserDataWithSupabase();
+        await syncUserDataWithSupabase();
     }
 
     let rot = 0;
-    function spinRoulette() {
+    async function spinRoulette() {
         const now = Date.now();
         if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
         lastActionTimestamp = now;
@@ -1295,7 +1371,7 @@
         rot += Math.floor(Math.random() * 2000) + 1800;
         if (wheel) wheel.style.transform = `rotate(${rot}deg)`;
 
-        setTimeout(() => {
+        setTimeout(async () => {
             let prizeMessage = "";
             globalGlobalPurchasesCounter++;
             const isGuaranteedVip = (globalGlobalPurchasesCounter % 10 === 0);
@@ -1316,7 +1392,7 @@
             }
 
             showToast(prizeMessage);
-            syncUserDataWithSupabase();
+            await syncUserDataWithSupabase();
         }, 4500);
     }
 
@@ -1378,7 +1454,7 @@
         guardarEstadoLocal();
     }
 
-    function reclamarPicoVIP() {
+    async function reclamarPicoVIP() {
         const now = Date.now();
         if (now - lastActionTimestamp < COOLDOWN_TIEMPO) return;
         lastActionTimestamp = now;
@@ -1387,7 +1463,7 @@
             userReferralData.hasClaimedVIP = true;
             showToast('¡Requisito verificado! Pico VIP añadido.');
             actualizarInterfazReferidos();
-            syncUserDataWithSupabase();
+            await syncUserDataWithSupabase();
         } else {
             showToast('Aún no cumples con los 10 referidos con compra.');
         }
