@@ -1,4 +1,4 @@
-<!D<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -1029,7 +1029,7 @@
     async function syncUserDataWithSupabase() {
         try {
             const payload = {
-                telegram_id: telegramId,
+                telegram_id: String(telegramId), // Forzado estrictamente a texto
                 username: currentUsername,
                 balance: currentUserBalance,
                 total_roi: currentUserTotalRoi,
@@ -1041,12 +1041,15 @@
                 valid_refs: userReferralData.validRefs
             };
             
-            const { error: upsertError } = await supabaseClient
+            const { data, error: upsertError } = await supabaseClient
                 .from('users')
-                .upsert([payload], { onConflict: 'telegram_id' });
+                .upsert(payload, { onConflict: 'telegram_id' })
+                .select(); // Obliga a Supabase a confirmar el guardado
 
             if (upsertError) {
-                console.error("Error al guardar en Supabase:", upsertError);
+                console.error("Error al guardar en Supabase:", upsertError.message);
+            } else {
+                console.log("Sincronización exitosa con Supabase:", data);
             }
         } catch (e) {
             console.error("Excepción en Supabase sync:", e);
