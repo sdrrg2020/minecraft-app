@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MinecrafTG - Professional Mini App</title>
+    <!-- Telegram Web App SDK (¡Crucial para que la app funcione dentro de Telegram!) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Fuentes Profesionales -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome para iconos -->
@@ -873,6 +875,7 @@
 
     const tg = window.Telegram?.WebApp;
     if (tg) {
+        tg.ready(); // Inicializa correctamente la app en Telegram
         tg.expand();
     }
     
