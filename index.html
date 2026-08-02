@@ -954,6 +954,38 @@
         localStorage.setItem(`claimed_vip_${telegramId}`, userReferralData.hasClaimedVIP);
     }
 
+    // Configuración de Supabase Realtime (Ajustes de saldo en línea en tiempo real)
+    function subscribeToRealtimeChanges() {
+        supabaseClient
+            .channel('public:users:' + telegramId)
+            .on('postgres_changes', { 
+                event: 'UPDATE', 
+                schema: 'public', 
+                table: 'users',
+                filter: `telegram_id=eq.${telegramId}`
+            }, payload => {
+                if (payload.new) {
+                    if (payload.new.balance !== undefined && payload.new.balance !== null) {
+                        currentUserBalance = parseFloat(payload.new.balance) || 0.00;
+                    }
+                    if (payload.new.total_roi !== undefined && payload.new.total_roi !== null) {
+                        currentUserTotalRoi = parseFloat(payload.new.total_roi) || 0.00;
+                    }
+                    if (payload.new.username) {
+                        currentUsername = payload.new.username;
+                    }
+                    if (payload.new.pickaxe_name) {
+                        currentUserPickaxe.name = payload.new.pickaxe_name;
+                        const activeLabel = document.getElementById('activePickaxeLabel');
+                        if (activeLabel) activeLabel.innerText = currentUserPickaxe.name;
+                    }
+                    updateInterfaceValues();
+                    showToast("⚡ ¡Datos actualizados desde el servidor!");
+                }
+            })
+            .subscribe();
+    }
+
     async function loadUserDataFromServer() {
         try {
             const { data, error } = await supabaseClient
@@ -963,8 +995,9 @@
                 .maybeSingle();
             
             if (data && !error) {
+                // Sincronizar 우선 el saldo desde el servidor en línea
                 if (data.balance !== undefined && data.balance !== null) {
-                    currentUserBalance = Math.max(currentUserBalance, parseFloat(data.balance) || 0.00);
+                    currentUserBalance = parseFloat(data.balance) || 0.00;
                 }
                 if (data.total_roi !== undefined && data.total_roi !== null) {
                     currentUserTotalRoi = parseFloat(data.total_roi) || 0.00;
@@ -1030,6 +1063,7 @@
 
         updateInterfaceValues();
         guardarEstadoLocal();
+        subscribeToRealtimeChanges();
     }
 
     async function syncUserDataWithSupabase() {
