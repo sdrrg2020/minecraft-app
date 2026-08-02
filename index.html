@@ -885,7 +885,13 @@
     }
 
     const startParam = obtenerParametroStartApp();
-    const telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : ('guest_' + Math.floor(Math.random() * 1000000));
+    
+    // Identificador persistente seguro para invitados y usuarios de Telegram
+    let telegramId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : localStorage.getItem('guest_telegram_id');
+    if (!telegramId) {
+        telegramId = 'guest_' + Math.floor(Math.random() * 1000000);
+        localStorage.setItem('guest_telegram_id', telegramId);
+    }
     
     if (startParam) {
         localStorage.setItem(`referred_by_${telegramId}`, startParam);
@@ -926,7 +932,6 @@
         hasClaimedVIP: localStorage.getItem(`claimed_vip_${telegramId}`) === 'true'
     };
 
-    let miningTimeRemaining = parseInt(localStorage.getItem(`mining_time_${telegramId}`)) || 0; 
     let miningInterval = null;
     let globalGlobalPurchasesCounter = 0;
     let lastActionTimestamp = 0; 
@@ -943,7 +948,6 @@
         localStorage.setItem(`total_refs_${telegramId}`, userReferralData.totalRefs);
         localStorage.setItem(`valid_refs_${telegramId}`, userReferralData.validRefs);
         localStorage.setItem(`claimed_vip_${telegramId}`, userReferralData.hasClaimedVIP);
-        localStorage.setItem(`mining_time_${telegramId}`, miningTimeRemaining);
     }
 
     async function loadUserDataFromServer() {
@@ -1017,7 +1021,6 @@
         if (currentUserPickaxe.name && currentUserPickaxe.name !== "Ninguno") {
             const activeLabel = document.getElementById('activePickaxeLabel');
             if (activeLabel) activeLabel.innerText = currentUserPickaxe.name;
-            if (!miningTimeRemaining || miningTimeRemaining <= 0) miningTimeRemaining = 86400;
             startMiningCountdown();
         }
 
@@ -1207,7 +1210,10 @@
         currentUserPickaxe.price = price;
 
         userRouletteData.hasFreeSpin = true;
-        miningTimeRemaining = 86400;
+        
+        // Iniciar ciclo de 24 horas usando marca de tiempo exacta (Timestamp)
+        const miningEndTime = Date.now() + (86400 * 1000);
+        localStorage.setItem(`mining_end_${telegramId}`, miningEndTime);
 
         if (wasNoPickaxe) {
             const referredBy = localStorage.getItem(`referred_by_${telegramId}`);
@@ -1264,9 +1270,11 @@
         }
 
         miningInterval = setInterval(() => {
+            const miningEndTime = parseInt(localStorage.getItem(`mining_end_${telegramId}`)) || 0;
+            const nowTime = Date.now();
+            let miningTimeRemaining = Math.max(0, Math.floor((miningEndTime - nowTime) / 1000));
+
             if (miningTimeRemaining > 0) {
-                miningTimeRemaining--;
-                guardarEstadoLocal();
                 let hrs = Math.floor(miningTimeRemaining / 3600);
                 let mins = Math.floor((miningTimeRemaining % 3600) / 60);
                 let secs = miningTimeRemaining % 60;
@@ -1304,7 +1312,9 @@
         currentUserTotalRoi += 5.00;
         updateInterfaceValues();
         showToast(`¡Bloques recolectados con éxito usando tu ${currentUserPickaxe.name}!`);
-        miningTimeRemaining = 86400; 
+        
+        const newMiningEndTime = Date.now() + (86400 * 1000);
+        localStorage.setItem(`mining_end_${telegramId}`, newMiningEndTime);
         startMiningCountdown();
         await syncUserDataWithSupabase();
     }
