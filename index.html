@@ -952,7 +952,7 @@
                 .from('users')
                 .select('*')
                 .eq('telegram_id', telegramId)
-                .single();
+                .maybeSingle(); // Corregido: maybeSingle evita el error 406 para usuarios nuevos
             
             if (data && !error) {
                 if (data.balance !== undefined && data.balance !== null) {
