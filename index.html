@@ -789,6 +789,10 @@
                     <button class="btn-buy" onclick="copiarEnlaceReferido()"><i class="fa-solid fa-copy"></i> Copiar Enlace</button>
                 </div>
 
+                <div id="debugRefBox" style="font-family:monospace;font-size:10px;line-height:1.7;color:#4deeea;background:#05070a;border:1px dashed #334155;border-radius:8px;padding:10px;margin-bottom:14px;word-break:break-all;text-align:left;">
+                    Diagnóstico cargando...
+                </div>
+
                 <div class="ref-stats-details">
                     <div>👥 Total Registrados: <span id="totalRefs" style="color:#fff;">0</span></div>
                     <div>🛒 Referidos Válidos (Con Pico Comprado): <span id="validRefs" style="color:var(--mc-green);">0</span> / 10</div>
@@ -990,10 +994,12 @@
 
     // Vincula al usuario nuevo con quien lo invitó (server-side, vía RPC)
     async function registrarReferidoEnServidor() {
-        if (!telegramId || !pendingRef) return;
-        if (!pendingRef.toLowerCase().startsWith('ref_')) return;
+        if (!telegramId) return;
+        if (!pendingRef) { pintarDiagnostico('NO llego ningun codigo de referido'); return; }
+        if (!pendingRef.toLowerCase().startsWith('ref_')) { pintarDiagnostico('codigo con formato raro: ' + pendingRef); return; }
         const referrerId = pendingRef.slice(4).trim();
-        if (!referrerId || referrerId === telegramId) return;
+        if (!referrerId) { pintarDiagnostico('codigo vacio'); return; }
+        if (referrerId === telegramId) { pintarDiagnostico('te invitaste a ti mismo (no cuenta)'); return; }
         try {
             const { error } = await supabaseClient.rpc('registrar_referido', {
                 p_user: String(telegramId),
@@ -1094,6 +1100,13 @@
                 userReferralData.totalRefs = parseInt(fresh.total_refs) || 0;
                 userReferralData.validRefs = parseInt(fresh.valid_refs) || 0;
             }
+
+            const { data: yo } = await supabaseClient
+                .from('users')
+                .select('referred_by')
+                .eq('telegram_id', telegramId)
+                .maybeSingle();
+            pintarDiagnostico('guardado en BD, mi referidor = ' + (yo?.referred_by || 'NINGUNO'));
         } catch (e) {
             console.log("Modo local activo:", e);
         }
@@ -1504,6 +1517,21 @@
         });
         showToast('¡Dirección USDT TRC20 copiada al portapapeles!');
     }
+
+    // ---- Caja de diagnostico temporal (se puede borrar cuando todo funcione) ----
+    function pintarDiagnostico(nota) {
+        const box = document.getElementById('debugRefBox');
+        if (!box) return;
+        const u = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        box.innerHTML =
+            'ID detectado: <b>' + (telegramId || 'NINGUNO') + '</b><br>' +
+            'Telegram entrego usuario: <b>' + (u ? 'SI' : 'NO') + '</b><br>' +
+            'start_param recibido: <b>' + (startParam || 'VACIO') + '</b><br>' +
+            'Ref guardado: <b>' + (pendingRef || 'VACIO') + '</b><br>' +
+            'URL: <b>' + (window.location.search || 'sin parametros') + '</b><br>' +
+            'Estado: <b>' + (nota || '-') + '</b>';
+    }
+    setTimeout(() => pintarDiagnostico('esperando datos'), 1200);
 
     function actualizarInterfazReferidos() {
         const totRef = document.getElementById('totalRefs');
